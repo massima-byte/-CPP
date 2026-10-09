@@ -1,0 +1,1 @@
+"""MTN marketing monitoring application."""

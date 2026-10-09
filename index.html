@@ -1,0 +1,1255 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#08090d">
+  <meta name="description" content="MTN Enterprise Intelligence — suivi marketing, commercial et opérationnel à partir d'indicateurs consolidés du Bénin.">
+  <title>MTN Enterprise Intelligence</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #08090d;
+      --bg-soft: #0e121b;
+      --panel: #111722;
+      --panel-2: #161f2c;
+      --line: #232a35;
+      --text: #eef1f5;
+      --muted: #788293;
+      --subtle: #a8b1bf;
+      --yellow: #ffc400;
+      --orange: #ff7900;
+      --green: #27c774;
+      --blue: #458aff;
+      --purple: #aa50fa;
+      --pink: #f04599;
+      --cyan: #03bed1;
+      --red: #ff5864;
+      --radius: 18px;
+      font-family: "DM Sans", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+    }
+    * { box-sizing: border-box; }
+    body {
+      min-width: 0; min-height: 100vh; margin: 0;
+      background:
+        radial-gradient(ellipse 55% 33% at 95% 14%, rgb(255 120 0 / 10%), transparent 75%),
+        radial-gradient(ellipse 55% 35% at 2% 45%, rgb(20 88 180 / 8%), transparent 74%),
+        var(--bg);
+    }
+    button, input, select { font: inherit; }
+    button { color: inherit; }
+    .shell { min-height: 100vh; }
+    .masthead {
+      position: sticky; top: 0; z-index: 20;
+      display: flex; min-height: 66px; align-items: center; justify-content: space-between; gap: 18px;
+      padding: 10px 25px; border-bottom: 1px solid #20232c;
+      background: rgb(8 9 13 / 94%); backdrop-filter: blur(15px);
+    }
+    .identity { display: flex; min-width: 265px; align-items: center; gap: 15px; }
+    .mtn-mark {
+      display: grid; width: 105px; height: 42px; flex: none; place-items: center; border-radius: 12px;
+      background: linear-gradient(135deg, #ffd000, #ff9f00); color: #101114;
+      font: 800 22px Manrope, sans-serif; letter-spacing: -.06em; box-shadow: 0 8px 27px rgb(255 174 0 / 13%);
+    }
+    .identity-title { font: 700 15px Manrope, sans-serif; letter-spacing: -.04em; white-space: nowrap; }
+    .identity-caption { margin-top: 3px; color: var(--muted); font: 9px "DM Mono", monospace; letter-spacing: .06em; }
+    .mast-actions { display: flex; align-items: center; gap: 9px; }
+    .status-chip, .top-action {
+      display: inline-flex; min-height: 37px; align-items: center; justify-content: center; gap: 8px;
+      padding: 0 12px; border: 1px solid #212631; border-radius: 11px;
+      background: #0c0e14; color: var(--subtle); font-size: 10px;
+    }
+    .status-chip { font-family: "DM Mono", monospace; }
+    .status-light { width: 8px; height: 8px; border-radius: 50%; background: #7caef8; box-shadow: 0 0 0 4px rgb(124 174 248 / 11%); }
+    .status-light.stale { background: #ff5864; box-shadow: 0 0 0 4px rgb(255 88 100 / 11%); }
+    .status-light.fresh { background: #27c774; box-shadow: 0 0 0 4px rgb(39 199 116 / 11%); }
+    .top-action { cursor: pointer; }
+    .top-action:hover { border-color: #58502e; color: var(--yellow); }
+    .top-action span { white-space: nowrap; }
+    .top-action.icon { width: 38px; padding: 0; font-size: 15px; }
+    .meta-pill { padding: 0 12px; color: #929aaa; font: 9px "DM Mono", monospace; }
+    .tabbar {
+      position: sticky; top: 66px; z-index: 19;
+      display: flex; min-height: 57px; align-items: center; gap: 5px; overflow-x: auto;
+      padding: 7px 22px; border-bottom: 1px solid #1c202a;
+      background: rgb(9 10 15 / 97%); scrollbar-width: thin;
+    }
+    .tab-group-label {
+      flex: none; padding: 0 9px 0 5px; color: #596273; font: 9px "DM Mono", monospace;
+      letter-spacing: .12em; text-transform: uppercase;
+    }
+    .tab {
+      display: inline-flex; flex: none; min-height: 35px; align-items: center; gap: 7px;
+      padding: 0 11px; border: 1px solid transparent; border-radius: 22px;
+      background: transparent; color: #9199a7; font-size: 10px; white-space: nowrap; cursor: pointer;
+      transition: .15s ease;
+    }
+    .tab:hover { background: #171a22; color: var(--text); }
+    .tab.active { border-color: #80410d; background: #311b0d; color: #ffc08b; }
+    .tab-icon { font: 14px "DM Mono", monospace; }
+    .tab-spacer { width: 1px; height: 21px; flex: none; margin: 0 5px; background: #252a33; }
+    .tab.export { width: 38px; justify-content: center; border-color: #242a34; border-radius: 10px; font-size: 14px; }
+    main { width: min(1570px, 100%); margin: 0 auto; padding: 31px 30px 70px; }
+    .view { display: none; animation: appear .19s ease; }
+    .view.active { display: block; }
+    @keyframes appear { from { opacity: .45; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+    .page-head { display: flex; align-items: end; justify-content: space-between; gap: 18px; margin: 5px 0 23px; }
+    .eyebrow { margin: 0 0 9px; color: #ff9b3e; font: 9px "DM Mono", monospace; letter-spacing: .16em; text-transform: uppercase; }
+    h1, h2, h3, p { margin-top: 0; }
+    h1 { margin-bottom: 8px; font: 800 clamp(25px, 3vw, 33px)/1.16 Manrope, sans-serif; letter-spacing: -.05em; }
+    .subtitle { max-width: 800px; margin: 0; color: #929cab; font-size: 11px; line-height: 1.75; }
+    .snapshot-tag { flex: none; padding: 8px 10px; border: 1px solid #25304a; border-radius: 9px; background: #0d1421; color: #9bb7e9; font: 9px "DM Mono", monospace; }
+    .grid { display: grid; gap: 12px; }
+    .grid-4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+    .grid-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .grid-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .card {
+      min-width: 0; border: 1px solid var(--line); border-radius: var(--radius);
+      background: linear-gradient(150deg, #131a26, #10141e 78%); box-shadow: 0 11px 35px rgb(0 0 0 / 8%);
+      transition: border-color .18s ease, box-shadow .18s ease, transform .18s ease;
+    }
+    .card:hover { border-color: #364252; box-shadow: 0 16px 42px rgb(0 0 0 / 16%); }
+    .hero-revenue {
+      position: relative; min-height: 268px; overflow: hidden; padding: 27px 31px;
+      border-color: #543011;
+      background: radial-gradient(ellipse 36% 75% at 88% 22%, rgb(255 132 0 / 20%), transparent 85%),
+        linear-gradient(125deg, #281b14 0%, #181a1e 54%, #10141d 100%);
+    }
+    .hero-revenue::after { position: absolute; right: -44px; top: -100px; width: 260px; height: 260px; border: 1px solid rgb(255 167 36 / 12%); border-radius: 50%; box-shadow: 0 0 0 27px rgb(255 167 36 / 3%), 0 0 0 56px rgb(255 167 36 / 2%); content: ""; }
+    .hero-label { margin: 0 0 20px; color: #a5a5a8; font-size: 10px; font-weight: 700; letter-spacing: .13em; text-transform: uppercase; }
+    .hero-value { position: relative; z-index: 1; margin: 0 0 22px; color: #ff9415; font: 800 clamp(32px, 4.7vw, 56px)/1 Manrope, sans-serif; letter-spacing: -.065em; overflow-wrap: anywhere; }
+    .hero-kpis { display: flex; flex-wrap: wrap; gap: 25px; }
+    .hero-kpi strong { display: block; color: var(--text); font: 800 18px Manrope, sans-serif; letter-spacing: -.04em; }
+    .hero-kpi span { display: block; margin-top: 5px; color: var(--muted); font-size: 9px; }
+    .compare-card { min-height: 268px; padding: 22px; }
+    .compare-card h2 { margin: 0 0 5px; font: 700 13px Manrope, sans-serif; }
+    .compare-card .caption { margin-bottom: 18px; color: var(--muted); font-size: 10px; }
+    .compare-value { margin-bottom: 15px; font: 800 23px Manrope, sans-serif; letter-spacing: -.05em; }
+    .compare-sub { margin: -10px 0 18px; color: var(--muted); font-size: 9px; }
+    .compare-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+    .compare-metric { min-height: 71px; padding: 11px; border: 1px solid #242d3a; border-radius: 12px; background: #151e2b; }
+    .compare-metric strong { display: block; font: 700 13px Manrope, sans-serif; }
+    .compare-metric span { display: block; margin-top: 5px; color: var(--muted); font-size: 8px; line-height: 1.4; text-transform: uppercase; }
+    .kpi-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; margin-top: 14px; }
+    #executive-kpis { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+    .kpi { min-height: 142px; padding: 17px 19px; }
+    .kpi-icon { display: grid; width: 37px; height: 37px; place-items: center; margin-bottom: 14px; border: 1px solid currentColor; border-radius: 11px; background: color-mix(in srgb, currentColor 13%, transparent); font-size: 17px; }
+    .kpi-icon.orange { color: var(--orange); }.kpi-icon.blue { color: var(--blue); }.kpi-icon.purple { color: var(--purple); }.kpi-icon.cyan { color: var(--cyan); }.kpi-icon.green { color: var(--green); }.kpi-icon.pink { color: var(--pink); }.kpi-icon.yellow { color: var(--yellow); }.kpi-icon.red { color: var(--red); }
+    .kpi-label { display: block; color: #858e9c; font-size: 9px; font-weight: 700; letter-spacing: .07em; text-transform: uppercase; }
+    .kpi-value { display: block; margin-top: 7px; font: 800 clamp(17px, 2vw, 24px)/1.2 Manrope, sans-serif; letter-spacing: -.045em; overflow-wrap: anywhere; }
+    .kpi-foot { margin-top: 4px; color: var(--muted); font-size: 9px; }
+    .freshness-banner {
+      display: flex; align-items: center; gap: 11px; margin: 14px 0; padding: 13px 16px;
+      border: 1px solid #1d385f; border-radius: 12px; background: #0c1424; color: #a8c2ee;
+      font-size: 10px; line-height: 1.55;
+    }
+    .freshness-banner strong { color: #d0e0ff; }
+    .freshness-banner.error { border-color: #643039; background: #1d1015; color: #ffc4ca; }
+    .banner-icon { color: var(--blue); font: 14px "DM Mono", monospace; }
+    .panel { padding: 19px; }
+    .panel-head { display: flex; align-items: start; justify-content: space-between; gap: 15px; margin-bottom: 16px; }
+    .panel-head h2 { margin: 0 0 5px; font: 700 13px Manrope, sans-serif; }
+    .panel-head p { margin: 0; color: var(--muted); font-size: 9px; line-height: 1.5; }
+    .panel-aside { flex: none; color: #808b9c; font: 9px "DM Mono", monospace; }
+    .trend-chart { position: relative; width: 100%; height: clamp(240px, 32vw, 360px); overflow: hidden; }
+    .trend-chart svg { display: block; width: 100%; height: 100%; overflow: visible; }
+    .trend-grid { stroke: #252c37; stroke-width: 1; }
+    .trend-axis-label { fill: #8993a2; font: 12px "DM Mono", monospace; }
+    .trend-x-label { fill: #8b95a4; font: 11px "DM Mono", monospace; text-anchor: middle; }
+    .trend-area { fill: url(#trend-area-fill); }
+    .trend-line { fill: none; stroke: #ff7900; stroke-width: 4; stroke-linecap: round; stroke-linejoin: round; }
+    .trend-point { fill: #ff7900; stroke: #111722; stroke-width: 2; }
+    .trend-crosshair { stroke: #8c929c; stroke-width: 1.5; stroke-dasharray: 5 6; opacity: .75; }
+    .trend-highlight { fill: #ff7900; stroke: #fff0db; stroke-width: 2; }
+    .trend-no-data { height: 100%; display: grid; place-items: center; color: var(--muted); font-size: 11px; }
+    .legend { display: flex; flex-wrap: wrap; gap: 13px; margin-top: 14px; color: var(--muted); font-size: 9px; }
+    .legend span { display: inline-flex; align-items: center; gap: 6px; }
+    .legend i { width: 7px; height: 7px; border-radius: 50%; background: var(--orange); }
+    .stack-list { display: grid; gap: 13px; }
+    .stack-row { display: grid; grid-template-columns: minmax(75px, 112px) minmax(0, 1fr) 84px; align-items: center; gap: 11px; }
+    .stack-name { overflow: hidden; color: var(--subtle); font-size: 9px; text-overflow: ellipsis; white-space: nowrap; }
+    .stack-track { height: 8px; overflow: hidden; border-radius: 9px; background: #222b38; }
+    .stack-fill { height: 100%; border-radius: inherit; background: linear-gradient(90deg, #f88700, #ffc800); }
+    .stack-fill.green { background: linear-gradient(90deg, #14975a, #48d88b); }
+    .stack-fill.red { background: linear-gradient(90deg, #d6424b, #ff8274); }
+    .stack-number { color: #d6dbe2; font: 9px "DM Mono", monospace; text-align: right; }
+    .table-card { overflow: hidden; }
+    .table-tools { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 13px 16px; border-bottom: 1px solid var(--line); }
+    .table-tools strong { font: 700 11px Manrope, sans-serif; }
+    .table-tools span { margin-left: 8px; color: var(--muted); font-size: 9px; }
+    .tools-right { display: flex; flex-wrap: wrap; gap: 7px; }
+    .tool-input, .tool-select, .btn {
+      min-height: 33px; padding: 0 10px; border: 1px solid #2b3340; border-radius: 8px;
+      background: #0c111a; color: var(--text); font-size: 9px;
+    }
+    .tool-input::placeholder { color: #687486; }
+    .btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; cursor: pointer; }
+    .btn:hover { border-color: #685123; color: var(--yellow); }
+    .table-scroll { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; white-space: nowrap; }
+    th { padding: 11px 14px; border-bottom: 1px solid var(--line); color: #697588; font: 9px "DM Mono", monospace; text-align: left; text-transform: uppercase; }
+    td { padding: 12px 14px; border-bottom: 1px solid rgb(35 42 53 / 76%); color: #aab4c2; font-size: 10px; }
+    tr:last-child td { border-bottom: 0; }
+    tbody tr:hover td { background: rgb(255 255 255 / 2%); }
+    .mono { font-family: "DM Mono", monospace; }
+    .td-strong { color: var(--text); font-weight: 700; }
+    .subheading { display: flex; align-items: end; justify-content: space-between; gap: 12px; margin: 24px 0 12px; }
+    .subheading h2 { margin: 0; font: 700 14px Manrope, sans-serif; }
+    .subheading span { color: var(--muted); font-size: 9px; }
+    .info-card { padding: 17px; }
+    .info-card h2 { margin: 0 0 8px; font: 700 12px Manrope, sans-serif; }
+    .info-card p { margin: 0; color: var(--subtle); font-size: 10px; line-height: 1.7; }
+    .info-card .big-number { display: block; margin: 13px 0 4px; font: 800 23px Manrope, sans-serif; letter-spacing: -.045em; }
+    .fine-print { margin: 12px 1px 0; color: #788496; font-size: 9px; line-height: 1.65; }
+    .geo-layout { display: grid; grid-template-columns: minmax(0, 1fr) minmax(300px, .85fr); gap: 12px; }
+    .geo-list { display: grid; gap: 11px; }
+    .geo-row { display: grid; grid-template-columns: 95px minmax(0, 1fr) 102px; align-items: center; gap: 11px; }
+    .geo-name { color: var(--subtle); font-size: 9px; }
+    .geo-value { color: var(--text); font: 9px "DM Mono", monospace; text-align: right; }
+    .geo-map-card { margin-top: 13px; overflow: hidden; }
+    .geo-map-controls { display: inline-flex; gap: 4px; padding: 3px; border: 1px solid #293342; border-radius: 10px; background: #0b111a; }
+    .geo-metric-button { min-height: 29px; padding: 0 10px; border: 0; border-radius: 7px; background: transparent; color: #8490a0; font-size: 9px; cursor: pointer; }
+    .geo-metric-button:hover, .geo-metric-button.active { background: #332012; color: #ffc080; }
+    .benin-map { display: grid; min-height: 420px; place-items: center; padding: 8px 12px 0; }
+    .benin-map svg { display: block; width: min(100%, 540px); height: min(67vh, 650px); min-height: 400px; overflow: visible; }
+    .benin-department { stroke: #111923; stroke-width: 1.15; stroke-linejoin: round; vector-effect: non-scaling-stroke; transition: fill .15s ease, stroke .15s ease; }
+    .benin-department:hover, .benin-department:focus { stroke: #fff1d1; stroke-width: 2.2; outline: none; }
+    .geo-map-legend { display: flex; align-items: center; justify-content: center; gap: 9px; padding: 0 10px 14px; color: #929bab; font: 9px "DM Mono", monospace; }
+    .geo-map-scale { width: 132px; height: 8px; border-radius: 99px; background: linear-gradient(90deg, #463016 0 16.6%, #61370f 16.6% 33.2%, #85470c 33.2% 49.8%, #ad5b08 49.8% 66.4%, #d5780c 66.4% 83%, #ffb62e 83% 100%); }
+    .masthead { min-height: 72px; border-bottom-color: #252a34; background: rgb(8 9 13 / 96%); }
+    .tabbar { min-height: 61px; box-shadow: 0 8px 28px rgb(0 0 0 / 15%); }
+    .tab { min-height: 38px; padding-right: 12px; padding-left: 12px; font-size: 10px; }
+    .tab.active { border-color: #805015; background: linear-gradient(115deg, #38220f, #261b12); color: #ffd091; box-shadow: inset 0 0 0 1px rgb(255 181 73 / 7%); }
+    .card { border-color: #252e3a; background: linear-gradient(145deg, #151c27, #10151e 76%); }
+    .kpi { min-height: 148px; }
+    .service-list { display: grid; gap: 10px; }
+    .service-item { display: grid; grid-template-columns: minmax(130px, 1.2fr) minmax(70px, .7fr) 70px 88px; align-items: center; gap: 12px; padding: 12px 13px; border: 1px solid #232d3b; border-radius: 11px; background: #131a25; }
+    .service-name { color: var(--text); font-size: 10px; font-weight: 600; }
+    .service-code { display: block; margin-top: 4px; color: var(--muted); font: 8px "DM Mono", monospace; }
+    .service-bar { height: 6px; border-radius: 8px; background: #2a313a; }
+    .service-bar i { display: block; height: 100%; border-radius: inherit; background: var(--orange); }
+    .service-n { color: var(--subtle); font: 9px "DM Mono", monospace; text-align: right; }
+    .fresh-table { display: grid; gap: 0; }
+    .fresh-row { display: grid; grid-template-columns: minmax(120px, .85fr) minmax(150px, 1.2fr) 110px 95px; gap: 12px; align-items: center; padding: 13px 14px; border-bottom: 1px solid var(--line); font-size: 9px; }
+    .fresh-row:last-child { border: 0; }
+    .fresh-row span:first-child { color: var(--text); font-family: "DM Mono", monospace; }
+    .fresh-row span:not(:first-child) { color: var(--subtle); }
+    .freshness-status { color: var(--orange)!important; font: 8px "DM Mono", monospace; text-transform: uppercase; }
+    .note { padding: 12px 14px; border: 1px solid #383221; border-radius: 10px; background: #1d1a13; color: #b5ad97; font-size: 9px; line-height: 1.7; }
+    .toast { position: fixed; right: 20px; bottom: 20px; z-index: 50; max-width: min(420px, calc(100vw - 40px)); padding: 12px 15px; border: 1px solid #384457; border-radius: 10px; background: #182131; color: var(--text); font-size: 10px; box-shadow: 0 12px 40px #0008; }
+    .toast[hidden] { display: none; }
+    footer { margin-top: 23px; padding-top: 13px; border-top: 1px solid #20252e; color: #697486; font: 8px/1.7 "DM Mono", monospace; }
+    @media(max-width: 1100px) {
+      .masthead { padding: 9px 16px; }
+      .tabbar { padding-right: 13px; padding-left: 13px; }
+      main { padding-right: 17px; padding-left: 17px; }
+      .grid-4, .kpi-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      #executive-kpis { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    }
+    @media(max-width: 760px) {
+      .masthead { position: relative; min-height: 58px; gap: 8px; padding: 8px 12px; }
+      .identity { min-width: 0; gap: 9px; }
+      .mtn-mark { width: 70px; height: 35px; border-radius: 10px; font-size: 17px; }
+      .identity-title { font-size: 11px; }
+      .identity-caption { font-size: 7px; }
+      .mast-actions { gap: 5px; }
+      .status-chip { min-height: 31px; padding: 0 8px; font-size: 8px; }
+      .status-chip .status-text { display: none; }
+      .meta-pill { display: none; }
+      .top-action.icon { width: 44px; min-height: 44px; }
+      .tabbar {
+        position: sticky; top: 0; min-height: 54px; gap: 4px; padding: 5px 10px;
+        scroll-padding-inline: 10px; scroll-snap-type: x proximity; overscroll-behavior-x: contain;
+      }
+      .tab { min-height: 44px; padding: 0 10px; font-size: 10px; scroll-snap-align: start; }
+      .tab.export { width: 44px; }
+      .tab-group-label { display: none; }
+      main { padding: 18px 12px max(44px, env(safe-area-inset-bottom)); }
+      .page-head { align-items: start; flex-direction: column; gap: 10px; }
+      .hero-revenue { min-height: 225px; padding: 22px 20px; }
+      .compare-card { min-height: auto; padding: 18px; }
+      .grid-2, .grid-3, .geo-layout { grid-template-columns: 1fr; }
+      .benin-map { min-height: 330px; }
+      .benin-map svg { height: 430px; min-height: 300px; }
+      .geo-metric-button { min-height: 44px; padding-inline: 13px; font-size: 10px; }
+      .kpi { min-height: 128px; padding: 14px; }
+      .kpi-grid { gap: 8px; }
+      #executive-kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .kpi-value { font-size: clamp(16px, 4.6vw, 21px); }
+      .trend-chart { height: 240px; }
+      .table-tools { align-items: start; flex-direction: column; }
+      .tools-right { width: 100%; }
+      .tool-input, .tool-select, .btn { min-height: 44px; font-size: 12px; }
+      .tool-input { min-width: 0; flex: 1; }
+      .table-scroll { -webkit-overflow-scrolling: touch; }
+      .panel-head { gap: 9px; }
+      .panel-aside { padding-top: 2px; }
+      .fresh-row { grid-template-columns: minmax(100px, .8fr) minmax(100px, 1fr) 80px; }
+      .fresh-row span:nth-child(3) { display: none; }
+    }
+    @media(max-width: 430px) {
+      .identity-title { font-size: 10px; }
+      .mtn-mark { width: 63px; }
+      .top-action.icon { display: inline-flex; width: 44px; min-height: 44px; }
+      .grid-4, .kpi-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .hero-kpis { gap: 15px; }
+      .hero-kpi strong { font-size: 15px; }
+      .compare-grid { gap: 6px; }
+      .compare-metric { padding: 9px; }
+      .panel { padding: 14px; }
+      .panel-aside { font-size: 7px; }
+      .stack-row { grid-template-columns: 70px 1fr 71px; gap: 7px; }
+      .geo-row { grid-template-columns: 73px 1fr 83px; gap: 7px; }
+      .service-item { grid-template-columns: minmax(0, 1fr) auto; gap: 8px 10px; padding: 11px; }
+      .service-bar { display: none; }
+      .service-n { white-space: nowrap; }
+      .fresh-row { grid-template-columns: 1fr auto; }
+      .fresh-row span:nth-child(2) { display: none; }
+      .fresh-row span:nth-child(4) { display: block; }
+      .subheading { align-items: start; flex-direction: column; }
+    }
+    @media(prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: .01ms!important; transition-duration: .01ms!important; scroll-behavior: auto!important; } }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <header class="masthead">
+      <div class="identity">
+        <div class="mtn-mark" aria-label="MTN">MTN</div>
+        <div><div class="identity-title">Enterprise Intelligence</div><div class="identity-caption">BUSINESS &amp; MARKETING MONITORING · BÉNIN</div></div>
+      </div>
+      <div class="mast-actions">
+        <span class="status-chip"><i class="status-light stale"></i><span class="status-text" id="source-status">Données non actualisées</span></span>
+        <span class="meta-pill" id="snapshot-age">SNAPSHOT ARCHIVÉ · 20 AOÛT 2026</span>
+        <button class="top-action icon" id="refresh-button" title="Actualiser les données depuis Presto" aria-label="Actualiser les données depuis Presto">↻</button>
+      </div>
+    </header>
+    <nav class="tabbar" aria-label="Modules de la plateforme">
+      <span class="tab-group-label">Pilotage</span>
+      <button class="tab active" data-view="executive"><span class="tab-icon">▦</span>Executive Dashboard</button>
+      <button class="tab" data-view="realtime"><span class="tab-icon">ϟ</span>Real-time BI</button>
+      <span class="tab-spacer"></span><span class="tab-group-label">Croissance</span>
+      <button class="tab" data-view="recruitment"><span class="tab-icon">↗</span>Recruitment</button>
+      <button class="tab" data-view="geographic"><span class="tab-icon">⌖</span>Geographic</button>
+      <span class="tab-spacer"></span><span class="tab-group-label">Monétique</span>
+      <button class="tab" data-view="momo"><span class="tab-icon">▱</span>Mobile Money</button>
+      <button class="tab" data-view="services"><span class="tab-icon">▧</span>Services</button>
+      <span class="tab-spacer"></span><span class="tab-group-label">Service</span>
+      <button class="tab" data-view="complaints"><span class="tab-icon">▤</span>Plaintes</button>
+      <span class="tab-spacer"></span><span class="tab-group-label">Système</span>
+      <button class="tab" data-view="system"><span class="tab-icon">⌘</span>Système</button>
+      <button class="tab" data-view="docs"><span class="tab-icon">▣</span>Documentation</button>
+      <span class="tab-spacer"></span>
+      <button class="tab export" id="export-button" title="Exporter le module actif en CSV" aria-label="Exporter le module actif en CSV">⇩</button>
+    </nav>
+    <main>
+      <section class="view active" id="view-executive">
+        <div class="page-head">
+          <div><p class="eyebrow">Pilotage exécutif · vue consolidée</p><h1>Le pouls de l’activité MTN Bénin</h1><p class="subtitle">Revenus, SIM et inscriptions — réunis dans une lecture synthétique. Les SIM enregistrées et les inscriptions ne représentent pas un nombre de personnes uniques.</p></div>
+          <span class="snapshot-tag" id="executive-snapshot-tag">EN ATTENTE DU SNAPSHOT PRESTO</span>
+        </div>
+        <div class="grid grid-2">
+          <article class="card hero-revenue">
+            <p class="hero-label">Revenu journalier observé</p>
+            <p class="hero-value" id="hero-revenue">—</p>
+            <div class="hero-kpis">
+              <div class="hero-kpi"><strong id="hero-arpu">—</strong><span>ARPU · FCFA</span></div>
+              <div class="hero-kpi"><strong id="hero-transactions">—</strong><span>Transactions</span></div>
+              <div class="hero-kpi"><strong id="hero-customers">—</strong><span>Clients uniques · jour</span></div>
+              <div class="hero-kpi"><strong id="hero-sims">—</strong><span>SIM enregistrées · lignes SIM, non dédupliquées en personnes</span></div>
+            </div>
+          </article>
+          <article class="card compare-card">
+            <h2>Périmètre de la mesure</h2>
+            <p class="caption">Indicateurs agrégés uniquement · pas de profil individuel</p>
+            <div class="compare-value">Marketing monitoring</div>
+            <p class="compare-sub">Les inscriptions et les lignes SIM ne sont pas assimilées à des personnes uniques.</p>
+            <div class="compare-grid">
+              <div class="compare-metric"><strong>Agrégats métier</strong><span>Sans profils individuels</span></div>
+              <div class="compare-metric"><strong>Sans segmentation client</strong><span>Pas de ciblage personnel</span></div>
+            </div>
+          </article>
+        </div>
+        <div class="freshness-banner" id="freshness-message" role="status"><span class="banner-icon">ⓘ</span><span><strong>Données en attente :</strong> la page charge le snapshot agrégé via le serveur local. Aucun chiffre historique n’est embarqué dans l’interface.</span></div>
+        <div class="kpi-grid" id="executive-kpis"></div>
+        <div class="subheading"><h2>Revenu journalier · 7 dernières journées disponibles</h2><span id="revenue-trend-period">En attente des partitions Presto</span></div>
+        <article class="card panel"><div class="panel-head"><div><h2>Tendance du revenu consolidé</h2><p>Revenu journalier observé · survolez un point pour consulter le montant et la date.</p></div><span class="panel-aside">FCFA</span></div><div class="trend-chart" id="revenue-trend"></div></article>
+        <footer id="executive-source"></footer>
+      </section>
+
+      <section class="view" id="view-realtime">
+        <div class="page-head"><div><p class="eyebrow">Revenue intelligence</p><h1>Performance commerciale observée</h1><p class="subtitle">Suivi horaire du revenu et des transactions issus d’Air Refill. L’indicateur principal met en avant la dernière heure écoulée complète; l’heure en cours, incomplète, n’est pas incluse.</p></div><span class="snapshot-tag" id="realtime-snapshot-tag">EN ATTENTE DES DONNÉES HORAIRES</span></div>
+        <div class="kpi-grid" id="realtime-kpis"></div>
+        <div class="note" id="realtime-comparison-note" style="margin-top:13px">Comparaison heure sur heure indisponible sans deux heures complètes consécutives.</div>
+        <div class="subheading"><h2>Revenu horaire · 24 dernières heures complètes</h2><span id="realtime-trend-period">En attente des partitions Presto</span></div>
+        <article class="card panel"><div class="panel-head"><div><h2>Évolution du revenu par heure</h2><p>La courbe s’arrête à la dernière heure complète. Les pointillés et le repère orange identifient l’heure précédente.</p></div><span class="panel-aside">FCFA · AGRÉGÉ</span></div><div class="trend-chart" id="realtime-trend"></div></article>
+        <div class="subheading"><h2>Qualité de fraîcheur</h2><span>État des partitions disponibles dans le snapshot</span></div>
+        <div class="note" id="realtime-freshness-note">Les valeurs présentées suivent la date de partition affichée. Une partition de la journée en cours est partielle ; elle n’est pas présentée comme une journée complète.</div>
+        <footer id="realtime-source">Source : itbi_ess.prod_kpis_revenu · partition journalière Presto.</footer>
+      </section>
+
+      <section class="view" id="view-recruitment">
+        <div class="page-head"><div><p class="eyebrow">Acquisition &amp; croissance</p><h1>Suivi des recrutements</h1><p class="subtitle">Inscriptions remontées par la source IRM. La cible mensuelle n’étant pas renseignée, aucun taux d’atteinte n’est inventé.</p></div><span class="snapshot-tag" id="recruitment-snapshot-tag">SOURCE IRM · EN ATTENTE</span></div>
+        <div class="kpi-grid" id="recruitment-kpis"></div>
+        <div class="grid grid-2" style="margin-top:13px">
+          <article class="card info-card"><h2>Flux observés</h2><span class="big-number">Agrégat IRM</span><p>Les inscriptions sont des lignes de la source et ne sont pas traitées comme des clients uniques.</p></article>
+          <article class="card info-card"><h2>Objectif mensuel</h2><span class="big-number">Non défini</span><p>La source de données ne contient pas de cible mensuelle. La progression vers un objectif est donc non calculable.</p></article>
+        </div>
+        <div class="note" id="registration-quality-note" style="margin-top:13px">Les totaux de dossiers d’inscription comptent des lignes source et ne représentent pas un nombre de clients uniques. Les SIM enregistrées sont un périmètre différent.</div>
+        <footer id="recruitment-source">Source : feeds.irm_edit_registration_status · dernière partition disponible.</footer>
+      </section>
+
+      <section class="view" id="view-geographic">
+        <div class="page-head"><div><p class="eyebrow">Performance territoriale</p><h1>Activité par département</h1><p class="subtitle">Carte administrative du Bénin mise en regard des revenus et rechargeurs distincts issus de la dernière partition géographique disponible. Les distincts départementaux ne représentent pas un stock d’abonnés actifs.</p></div><span class="snapshot-tag" id="geo-snapshot-tag">GÉOGRAPHIE · EN ATTENTE</span></div>
+        <div class="kpi-grid" id="geo-kpis"></div>
+        <article class="card panel geo-map-card">
+          <div class="panel-head">
+            <div><h2>Carte du Bénin · activité par département</h2><p id="geo-map-caption">Limites des 12 départements · valeurs issues de la partition source.</p></div>
+            <div class="geo-map-controls" role="group" aria-label="Indicateur cartographique">
+              <button class="geo-metric-button active" type="button" data-geo-metric="revenue" aria-pressed="true">Revenu</button>
+              <button class="geo-metric-button" type="button" data-geo-metric="customers" aria-pressed="false">Rechargeurs</button>
+            </div>
+          </div>
+          <div class="benin-map" id="benin-map" role="status">Chargement de la carte administrative…</div>
+          <div class="geo-map-legend" aria-label="Légende de la carte"><span>Plus faible</span><i class="geo-map-scale"></i><span>Plus élevé</span></div>
+        </article>
+        <div class="geo-layout" style="margin-top:13px">
+          <article class="card panel"><div class="panel-head"><div><h2>Rechargeurs distincts par département</h2><p>Distincts source par département · date affichée ci-dessus.</p></div><span class="panel-aside">MSISDN DISTINCTS</span></div><div class="geo-list" id="geo-clients"></div></article>
+          <article class="card panel"><div class="panel-head"><div><h2>Revenu par département</h2><p>Sommes d’après la partition source affichée.</p></div><span class="panel-aside">FCFA</span></div><div class="geo-list" id="geo-revenue"></div></article>
+        </div>
+        <footer id="geographic-source">Source : itbi_ess.datamart_refill_loc_vw · agrégats géographiques.</footer>
+      </section>
+
+      <section class="view" id="view-momo">
+        <div class="page-head"><div><p class="eyebrow">Monétique · Mobile Money</p><h1>Activité &amp; volumes MoMo</h1><p class="subtitle">Volumes et utilisateurs distincts observés dans la dernière partition Mobile Money. Les commerçants actifs et le taux de frais ne sont pas fournis par l’agrégat.</p></div><span class="snapshot-tag" id="momo-snapshot-tag">SNAPSHOT · 19 AOÛT 2026</span></div>
+        <div class="kpi-grid" id="momo-kpis"></div>
+        <div class="subheading"><h2>Évolution du volume MoMo · 7 jours</h2><span id="momo-trend-period">En attente des partitions Presto</span></div>
+        <article class="card panel"><div class="panel-head"><div><h2>Volume traité par jour</h2><p>Somme de la colonne value dans l’agrégat source; les jours absents ne sont pas interpolés.</p></div><span class="panel-aside">FCFA</span></div><div class="trend-chart" id="momo-trend"></div></article>
+        <div class="grid grid-2" id="momo-notes" style="margin-top:13px"></div>
+        <article class="card table-card" style="margin-top:13px"><div class="panel-head"><div><h2>Activité par type d’opération</h2><p>Totaux de la source; les distincts par type peuvent se chevaucher.</p></div><span class="panel-aside">DATE SOURCE · <span id="momo-breakdown-date">—</span></span></div><div class="table-scroll" id="momo-breakdown"></div></article>
+        <div class="note" style="margin-top:13px">Le taux de frais n’est pas fourni. Les frais totaux proviennent du champ agrégé de la source; les frais par utilisateur sont calculés en divisant ces frais par les utilisateurs distincts de la partition. Confirmer la période de cumul avec l’équipe Finance avant toute publication externe.</div>
+        <footer id="momo-source">Source : mfs_bi.fact_momo_all · dernière partition disponible.</footer>
+      </section>
+
+      <section class="view" id="view-services">
+        <div class="page-head"><div><p class="eyebrow">Performance des offres</p><h1>Activations de services &amp; forfaits</h1><p class="subtitle">Activations, distincts estimés et montants agrégés depuis la partition journalière Air Refill. Le distinct est approximatif; seuls les montants de transaction d’au moins 100 FCFA sont inclus.</p></div><span class="snapshot-tag" id="services-snapshot-tag">SOURCE AIR REFILL · EN ATTENTE</span></div>
+        <div class="grid grid-2" style="margin-bottom:13px">
+          <article class="card info-card"><h2>Offres et services remontés</h2><span class="big-number" id="service-count">—</span><p>Top 12 par montant parmi les catégories remontées par la source.</p></article>
+          <article class="card info-card"><h2>Date de référence source</h2><span class="big-number" id="service-date">—</span><p id="service-date-note">La somme des activations n’est pas assimilée au nombre de clients uniques.</p></article>
+        </div>
+        <div class="subheading"><h2>Activité des services · 7 jours</h2><span id="service-trend-period">En attente des partitions Presto</span></div>
+        <div class="grid grid-2">
+          <article class="card panel"><div class="panel-head"><div><h2>Montant observé par jour</h2><p>Opérations de service filtrées selon le seuil source.</p></div><span class="panel-aside">FCFA</span></div><div class="trend-chart" id="service-amount-trend"></div></article>
+          <article class="card panel"><div class="panel-head"><div><h2>Activations par jour</h2><p>Comptage de transactions, pas de clients uniques.</p></div><span class="panel-aside">ACTIVATIONS</span></div><div class="trend-chart" id="service-activation-trend"></div></article>
+        </div>
+        <article class="card panel"><div class="panel-head"><div><h2>Détail des offres</h2><p>Montants et activations tels que publiés par la source.</p></div><span class="panel-aside">FCFA · OFFRES SOURCE</span></div><div class="service-list" id="service-list"></div></article>
+        <footer id="services-source">Source : feeds.air_refill_ma · dernière partition disponible.</footer>
+      </section>
+
+      <section class="view" id="view-complaints">
+        <div class="page-head"><div><p class="eyebrow">Expérience client · support</p><h1>Voix du client &amp; activité support</h1><p class="subtitle">Volumes source sur les 30 derniers jours complets avant la date d’extraction, avec le nombre distinct propre à chaque système.</p></div><span class="snapshot-tag" id="complaint-snapshot-tag">SUPPORT · EN ATTENTE</span></div>
+        <div class="kpi-grid" id="complaint-kpis"></div>
+        <div class="subheading"><h2>Charge de service observée</h2><span id="complaint-period">Comptages source · période indisponible</span></div>
+        <div class="grid grid-2" id="complaint-details"></div>
+        <div class="grid grid-2" style="margin-top:13px">
+          <article class="card panel"><div class="panel-head"><div><h2>Tickets enregistrés · tendance quotidienne</h2><p>Comptage des dossiers par date de création, sans donnée nominative.</p></div><span class="panel-aside">TICKETS</span></div><div class="trend-chart" id="ticket-daily-trend"></div></article>
+          <article class="card panel"><div class="panel-head"><div><h2>Conversations YelloChat · tendance quotidienne</h2><p>Comptage des conversations par date de création, source distincte.</p></div><span class="panel-aside">CONVERSATIONS</span></div><div class="trend-chart" id="conversation-daily-trend"></div></article>
+        </div>
+        <article class="card table-card" style="margin-top:13px"><div class="panel-head"><div><h2>Tickets par statut source</h2><p>Répartition agrégée sur la même fenêtre de 30 jours complets.</p></div><span class="panel-aside">PARTITION · <span id="ticket-status-date">—</span></span></div><div class="table-scroll" id="ticket-status-breakdown"></div></article>
+        <div class="note" id="complaint-quality-note" style="margin-top:13px">Aucun agrégat récent disponible. Aucun total ancien n’est présenté comme courant.</div>
+        <footer id="complaint-source">Sources : feeds.trouble_ticket · feeds.yellochat_conversations.</footer>
+      </section>
+
+      <section class="view" id="view-system">
+        <div class="page-head"><div><p class="eyebrow">État des données</p><h1>Fraîcheur &amp; qualité de publication</h1><p class="subtitle">État de chaque source selon sa dernière partition Presto. Les domaines sans partition vérifiée sont explicitement signalés comme non rafraîchis.</p></div><span class="snapshot-tag" id="system-snapshot-age">SNAPSHOT · 20 AOÛT 2026</span></div>
+        <div class="kpi-grid" id="system-kpis"></div>
+        <div class="subheading"><h2>Catalogue des sources &amp; date des agrégats</h2><span>État courant par partition</span></div>
+        <article class="card table-card"><div class="fresh-table" id="freshness-table"></div></article>
+        <div class="note" style="margin-top:13px">Les extractions sont limitées à des partitions récentes et aux agrégats marketing. Les données individuelles, les profils clients et le ciblage personnel ne sont ni interrogés ni exportés par cette application.</div>
+        <footer>Source de contrôle : <code>data/marketing_metrics.json</code> · généré par Presto.</footer>
+      </section>
+
+      <section class="view" id="view-docs">
+        <div class="page-head"><div><p class="eyebrow">Documentation &amp; définitions</p><h1>Lire les indicateurs avant d’agir</h1><p class="subtitle">Origine des métriques, périmètres distincts et garde-fous de présentation pour les équipes marketing, commerciales et opérationnelles.</p></div><span class="snapshot-tag">RÉFÉRENCES INTERNES</span></div>
+        <div class="grid grid-2" id="docs-grid"></div>
+        <div class="subheading"><h2>Définitions utilisées</h2><span>Ne pas mélanger des populations distinctes</span></div>
+        <article class="card panel"><div class="fresh-row"><span>SIM enregistrées</span><span>Lignes / cartes SIM présentes dans la base ; ne déduplique pas les personnes.</span><span>SDP dump MA</span><span class="freshness-status">Agrégat source</span></div><div class="fresh-row"><span>Clients uniques journaliers</span><span>Numéros distincts présents dans l’agrégat revenu de cette journée.</span><span>Prod KPIs revenu</span><span class="freshness-status">Agrégat source</span></div><div class="fresh-row"><span>ARPU observé</span><span>Revenu journalier divisé par les clients uniques journaliers.</span><span>Calcul de l’interface</span><span class="freshness-status">Indicateur dérivé</span></div></article>
+        <div class="subheading"><h2>Documentation associée aux sources</h2><span>Références présentes dans le dossier source</span></div>
+        <div class="grid grid-3"><article class="card info-card"><h2>Inventaire des données</h2><p>Référentiel des sources, couverture, limites et périmètres des analyses marketing.</p></article><article class="card info-card"><h2>État du projet</h2><p>Décisions, résultats du pilote de monitoring et contraintes de validation.</p></article><article class="card info-card"><h2>Guide d’interface</h2><p>Principes de lecture et surfaces de l’interface source.</p></article></div>
+        <footer>Interface alimentée par les agrégats Presto enregistrés dans le snapshot local.</footer>
+      </section>
+    </main>
+  </div>
+  <div class="toast" id="toast" role="status" hidden></div>
+  <script>
+    const SERVER_STATUS_POLL_INTERVAL_MS = 60 * 1000;
+    const DATA = {
+      generatedDate: "",
+      generatedAt: "",
+      live: false,
+      executive: {
+        date: null, totalRevenue: null, totalTransactions: null, uniqueCustomers: null,
+        avgTransaction: null, arpu: null, totalSims: null, activatedSims: null,
+        trend: []
+      },
+      recruitment: {
+        date: null, daily: null, weekly: null, monthly: null,
+        totalRegistrations: null, targetMonthly: null
+      },
+      geographic: {
+        date: null, revenueDate: null, revenuePartial: false, totalCustomers: null,
+        customers: {}, revenue: {}, customersFresh: false
+      },
+      momo: {
+        date: null, mau: null, transactions: null, volume: null, merchants: null,
+        avgTransaction: null, feeRate: null, fees: null, txPerUser: null, revenuePerUser: null
+      },
+      services: { date: null, items: [] },
+      realtime_hourly: { hours: [], previous_hour: null },
+      complaints: {
+        date: null, periodStart: null, periodEnd: null, tickets: null,
+        ticketClients: null, ticketSourceDate: null, conversations: null,
+        conversationClients: null, conversationSourceDate: null, available: false
+      },
+      sources: []
+    };
+
+    const fmt = new Intl.NumberFormat("fr-FR", { maximumFractionDigits: 0 });
+    const fmt1 = new Intl.NumberFormat("fr-FR", { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+    const fmt2 = new Intl.NumberFormat("fr-FR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    const safe = value => String(value ?? "").replace(/[&<>"']/g, ch => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[ch]);
+    const number = (value, formatter = fmt) => value == null ? "Non disponible" : formatter.format(value);
+    const fcf = value => value == null ? "Non disponible" : `${fmt.format(value)} FCFA`;
+    const signedFcf = value => value == null ? "Non disponible" : `${value > 0 ? "+" : value < 0 ? "−" : ""}${fcf(Math.abs(value))}`;
+    const pct = value => value == null ? "Non disponible" : `${fmt1.format(value)} %`;
+    const labelDate = value => {
+      if (!value) return "Non disponible";
+      const raw = String(value).replaceAll("-", "");
+      if (!/^\d{8}$/.test(raw)) return String(value);
+      return `${raw.slice(6, 8)}/${raw.slice(4, 6)}/${raw.slice(0, 4)}`;
+    };
+    const dateFr = value => {
+      if (!value) return "—";
+      const [year, month, day] = value.split("-");
+      return `${day}/${month}`;
+    };
+    const currentGeneratedDate = () => {
+      const raw = String(DATA.generatedDate || "");
+      return new Date(`${raw.slice(0, 4)}-${raw.slice(4, 6)}-${raw.slice(6, 8)}T00:00:00`);
+    };
+    let geographicMetric = "revenue";
+    let beninBoundaries = null;
+
+    function kpi(icon, color, label, value, foot = "") {
+      return `<article class="card kpi"><span class="kpi-icon ${color}">${icon}</span><span class="kpi-label">${label}</span><strong class="kpi-value">${value}</strong>${foot ? `<div class="kpi-foot">${foot}</div>` : ""}</article>`;
+    }
+
+    function renderTrend(targetId, rows, { hourly = false, highlightIndex = -1, valueKey = "revenue", valueFormatter = fcf, labelInterval = 1, ariaLabel } = {}) {
+      const root = document.getElementById(targetId);
+      const width = 960;
+      const height = 360;
+      const plot = { left: 82, right: 24, top: 25, bottom: 46 };
+      const plotWidth = width - plot.left - plot.right;
+      const plotHeight = height - plot.top - plot.bottom;
+      const points = rows.map((row, index) => ({
+        row,
+        index,
+        value: row[valueKey],
+        x: plot.left + (rows.length <= 1 ? plotWidth / 2 : index * plotWidth / (rows.length - 1))
+      }));
+      const observed = points.filter(point => point.value != null && Number.isFinite(Number(point.value)));
+      if (!observed.length) {
+        root.innerHTML = `<div class="trend-no-data">Aucune donnée ${hourly ? "horaire" : "journalière"} disponible.</div>`;
+        return;
+      }
+      const max = Math.max(1, ...observed.map(point => Number(point.value)));
+      const y = value => plot.top + (1 - Number(value) / max) * plotHeight;
+      points.forEach(point => {
+        if (point.value != null && Number.isFinite(Number(point.value))) point.y = y(point.value);
+      });
+      const pathFor = segment => {
+        if (!segment.length) return "";
+        let path = `M ${segment[0].x} ${segment[0].y}`;
+        for (let index = 0; index < segment.length - 1; index++) {
+          const previous = segment[Math.max(0, index - 1)];
+          const current = segment[index];
+          const next = segment[index + 1];
+          const following = segment[Math.min(segment.length - 1, index + 2)];
+          const control1X = current.x + (next.x - previous.x) / 6;
+          const control1Y = current.y + (next.y - previous.y) / 6;
+          const control2X = next.x - (following.x - current.x) / 6;
+          const control2Y = next.y - (following.y - current.y) / 6;
+          path += ` C ${control1X} ${control1Y}, ${control2X} ${control2Y}, ${next.x} ${next.y}`;
+        }
+        return path;
+      };
+      const segments = [];
+      let segment = [];
+      for (const point of points) {
+        if (point.y == null) {
+          if (segment.length) segments.push(segment);
+          segment = [];
+        } else segment.push(point);
+      }
+      if (segment.length) segments.push(segment);
+      const lines = segments.map(pathFor).join(" ");
+      const areas = segments.filter(group => group.length > 1).map(group =>
+        `${pathFor(group)} L ${group.at(-1).x} ${plot.top + plotHeight} L ${group[0].x} ${plot.top + plotHeight} Z`
+      ).join(" ");
+      const tickCount = 4;
+      const grid = Array.from({ length: tickCount + 1 }, (_, index) => {
+        const value = max * (tickCount - index) / tickCount;
+        const yPos = plot.top + index * plotHeight / tickCount;
+        const label = max >= 1000000 ? `${fmt.format(value / 1000000)} M` : fmt.format(value);
+        return `<line class="trend-grid" x1="${plot.left}" y1="${yPos}" x2="${width - plot.right}" y2="${yPos}"/><text class="trend-axis-label" x="${plot.left - 12}" y="${yPos + 5}" text-anchor="end">${label}</text>`;
+      }).join("");
+      const xLabels = points.filter(point => hourly
+        ? point.index % 6 === 0 || point.index === points.length - 1
+        : point.index % labelInterval === 0 || point.index === points.length - 1)
+        .map(point => {
+          const label = hourly
+            ? `${String(point.row.hour).padStart(2, "0")}h`
+            : dateFr(point.row.date);
+          return `<text class="trend-x-label" x="${point.x}" y="${height - 10}">${label}</text>`;
+        }).join("");
+      const circles = observed.map(point => {
+        const label = hourly
+          ? `${labelDate(point.row.date)} · ${String(point.row.hour).padStart(2, "0")}:00`
+          : labelDate(point.row.date);
+        const transactionLabel = point.row.transactions == null ? "" : ` · ${fmt.format(point.row.transactions)} transactions`;
+        const highlight = point.index === highlightIndex;
+        return `<circle class="trend-point${highlight ? " trend-highlight" : ""}" cx="${point.x}" cy="${point.y}" r="${highlight ? 6 : 4}"><title>${safe(label)} · ${valueFormatter(point.value)}${transactionLabel}</title></circle>`;
+      }).join("");
+      const selected = points.find(point => point.index === highlightIndex && point.y != null);
+      const marker = selected
+        ? `<g><line class="trend-crosshair" x1="${selected.x}" y1="${plot.top}" x2="${selected.x}" y2="${plot.top + plotHeight}"/><line class="trend-crosshair" x1="${plot.left}" y1="${selected.y}" x2="${width - plot.right}" y2="${selected.y}"/><circle class="trend-highlight" cx="${selected.x}" cy="${selected.y}" r="6"/><rect x="${Math.min(Math.max(selected.x - 116, plot.left + 8), width - plot.right - 236)}" y="${plot.top + 10}" width="228" height="58" rx="10" fill="#0c111b" stroke="#343d4b"/><text class="trend-axis-label" x="${Math.min(Math.max(selected.x - 102, plot.left + 22), width - plot.right - 220)}" y="${plot.top + 32}">${hourly ? "HEURE COMPLÈTE" : "DERNIÈRE PARTITION"} · ${hourly ? `${String(selected.row.hour).padStart(2, "0")}:00` : labelDate(selected.row.date)}</text><text x="${Math.min(Math.max(selected.x - 102, plot.left + 22), width - plot.right - 220)}" y="${plot.top + 55}" fill="#f1f4f8" font-size="14" font-weight="700">${valueFormatter(selected.value)}</text></g>`
+        : "";
+      root.innerHTML = `<svg viewBox="0 0 ${width} ${height}" role="img" aria-label="${safe(ariaLabel || (hourly ? "Revenu par heure, dernières 24 heures" : "Tendance du revenu journalier"))}"><defs><linearGradient id="${targetId}-fill" x1="0" x2="0" y1="0" y2="1"><stop offset="0%" stop-color="#ff7900" stop-opacity=".36"/><stop offset="100%" stop-color="#ff7900" stop-opacity=".02"/></linearGradient></defs>${grid}<path class="trend-area" fill="url(#${targetId}-fill)" d="${areas}"/><path class="trend-line" d="${lines}"/>${xLabels}${marker}${circles}</svg>`;
+    }
+
+    function renderExecutive() {
+      const x = DATA.executive;
+      const comparison = x.dayOverDay;
+      document.getElementById("hero-revenue").textContent = fcf(x.totalRevenue);
+      document.getElementById("hero-arpu").textContent = number(x.arpu, fmt1);
+      document.getElementById("hero-transactions").textContent = number(x.totalTransactions);
+      document.getElementById("hero-customers").textContent = number(x.uniqueCustomers);
+      document.getElementById("hero-sims").textContent = number(x.totalSims);
+      document.getElementById("executive-kpis").innerHTML = [
+        kpi("▣", "purple", "Base totale · SIM enregistrées", number(x.totalSims), "SIMs / lignes réseau, pas une déduplication en personnes"),
+        kpi("◎", "blue", "SIM activées", number(x.activatedSims), `Sur ${number(x.totalSims)} SIM au total`),
+        kpi("◷", "pink", "Transactions · jour", number(x.totalTransactions), labelDate(x.date)),
+        kpi("♙", "cyan", "Clients distincts · jour", number(x.uniqueCustomers), "Agrégat de revenu, numéro dédupliqué par date"),
+        kpi("▱", "green", "Transaction moyenne", fcf(x.avgTransaction), "Calculée depuis le revenu et les transactions"),
+        kpi("↕", comparison ? (comparison.revenueDelta > 0 ? "green" : comparison.revenueDelta < 0 ? "red" : "blue") : "blue", "Variation revenu · vs veille", signedFcf(comparison?.revenueDelta), comparison ? `${comparison.revenuePercentChange == null ? "Variation % non calculable" : `${pct(comparison.revenuePercentChange * 100)} vs ${labelDate(comparison.previousDate)}`}` : "Journée précédente consécutive indisponible")
+      ].join("");
+      renderTrend("revenue-trend", DATA.executive.trend, {
+        highlightIndex: DATA.executive.trend.length - 1
+      });
+      document.getElementById("executive-source").textContent = DATA.generatedAt
+        ? `Source : itbi_ess.prod_kpis_revenu + feeds.sdp_dump_ma · revenus ${labelDate(x.date)} · extraction ${new Date(DATA.generatedAt).toLocaleString("fr-FR")}.`
+        : "Aucun snapshot Presto n’est chargé.";
+      document.getElementById("revenue-trend-period").textContent = DATA.executive.trend.length
+        ? `FCFA · ${dateFr(DATA.executive.trend[0].date)}–${dateFr(DATA.executive.trend.at(-1).date)}`
+        : "Aucune partition disponible";
+      document.getElementById("executive-snapshot-tag").textContent = DATA.generatedAt
+        ? `PRESTO · JOURNÉE ${labelDate(x.date)}`
+        : "EN ATTENTE DU SNAPSHOT PRESTO";
+    }
+
+    function renderRealtime() {
+      const x = DATA.executive;
+      const hourly = DATA.realtime_hourly || { hours: [], previous_hour: null, hour_over_hour: null };
+      const previous = hourly.previous_hour;
+      const comparison = hourly.hour_over_hour;
+      const previousHour = previous ? `${String(previous.hour).padStart(2, "0")}:00–${String((previous.hour + 1) % 24).padStart(2, "0")}:00` : "Non disponible";
+      const previousPeriod = previous ? `${labelDate(previous.date)} · ${previousHour}` : "Heure précédente non disponible";
+      document.getElementById("realtime-kpis").innerHTML = [
+        kpi("▰", "orange", "Revenu · heure précédente", fcf(previous?.revenue), previousPeriod),
+        kpi("◷", "blue", "Transactions · heure précédente", number(previous?.transactions), previousPeriod),
+        kpi("▱", "purple", "Ticket moyen · heure précédente", fcf(previous && previous.transactions ? previous.revenue / previous.transactions : null), "Revenu horaire / transactions horaires"),
+        kpi("↕", comparison ? (comparison.revenueDelta > 0 ? "green" : comparison.revenueDelta < 0 ? "red" : "blue") : "blue", "Variation revenu · vs heure antérieure", signedFcf(comparison?.revenueDelta), comparison ? `${comparison.revenuePercentChange == null ? "Variation % non calculable" : `${pct(comparison.revenuePercentChange * 100)} vs ${new Date(comparison.previousTimestamp).toLocaleString("fr-FR", { day: "2-digit", month: "2-digit", hour: "2-digit" })}`}` : "Deux heures complètes consécutives indisponibles"),
+        kpi("◷", "cyan", "Revenu journalier observé", fcf(x.totalRevenue), labelDate(x.date))
+      ].join("");
+      document.getElementById("realtime-comparison-note").textContent = comparison
+        ? `Comparaison des heures complètes ${new Date(comparison.previousTimestamp).toLocaleString("fr-FR", { day: "2-digit", month: "2-digit", hour: "2-digit" })} et ${previousPeriod}. Écart transactions : ${comparison.transactionsDelta > 0 ? "+" : ""}${number(comparison.transactionsDelta)}${comparison.transactionsPercentChange == null ? "" : ` (${pct(comparison.transactionsPercentChange * 100)})`}.`
+        : "Comparaison heure sur heure indisponible : il faut deux heures complètes consécutives observées. Aucun zéro n’est substitué à une heure manquante.";
+      renderTrend("realtime-trend", hourly.hours, {
+        hourly: true,
+        highlightIndex: previous ? hourly.hours.length - 1 : -1
+      });
+      document.getElementById("realtime-snapshot-tag").textContent = previous
+        ? `DERNIÈRE HEURE · ${previousPeriod}`
+        : "HEURE PRÉCÉDENTE NON DISPONIBLE";
+      document.getElementById("realtime-trend-period").textContent = previous
+        ? `24 h · dernière heure complète ${previousPeriod}`
+        : "Aucune donnée disponible pour l’heure précédente";
+      document.getElementById("realtime-freshness-note").textContent = previous
+        ? `Heure complète : ${previousPeriod}. L’heure courante n’est pas incluse, car elle est incomplète. La série provient des événements Air Refill agrégés par heure.`
+        : "L’heure précédente n’a pas encore de données dans les partitions chargées. Aucun zéro n’est inventé; utilisez ↻ pour réinterroger Presto.";
+      document.getElementById("realtime-source").textContent =
+        "Source : feeds.air_refill_ma · transaction_amt agrégé et transactions comptées par hour(event_dt), sur partitions récentes.";
+    }
+
+    function renderRecruitment() {
+      const x = DATA.recruitment;
+      document.getElementById("recruitment-kpis").innerHTML = [
+        kpi("ϟ", "orange", "Inscriptions du jour", number(x.daily)),
+        kpi("↗", "blue", "Inscriptions · 7 jours", number(x.weekly)),
+        kpi("♙", "green", "Inscriptions · mois", number(x.monthly)),
+        kpi("▣", "purple", "Lignes au snapshot", number(x.totalRegistrations), "Ne correspond pas à des clients uniques")
+      ].join("");
+      document.getElementById("registration-quality-note").textContent =
+        `Partition d’inscription ${labelDate(x.date)}. Les totaux comptent des lignes source et ne représentent pas un nombre de clients uniques.`;
+      document.getElementById("recruitment-snapshot-tag").textContent = `IRM · ${labelDate(x.date)}`;
+      document.getElementById("recruitment-source").textContent =
+        `Source : feeds.irm_edit_registration_status · partition ${labelDate(x.date)} · inscriptions exprimées en lignes source.`;
+    }
+
+    function renderGeography() {
+      const x = DATA.geographic;
+      const customers = Object.entries(x.customers || {}).sort((a, b) => b[1] - a[1]);
+      const revenues = Object.entries(x.revenue).sort((a, b) => b[1] - a[1]);
+      const departmentCount = new Set(
+        [...Object.keys(x.customers || {}), ...Object.keys(x.revenue || {})]
+          .filter(name => normalizeDepartment(name) !== "non renseigne")
+      ).size;
+      const maxCustomers = customers[0]?.[1] || 0;
+      const maxRevenue = revenues[0]?.[1] || 0;
+      document.getElementById("geo-kpis").innerHTML = [
+        kpi("⌖", "orange", "Rechargeurs distincts · total", x.customersFresh ? number(x.totalCustomers) : "Non disponible", "Distinct national dans le fait géographique"),
+        kpi("▦", "blue", "Départements", number(departmentCount), "Bénin"),
+        kpi("¤", "green", "Revenu géographique", revenues.length ? fcf(Object.values(x.revenue).reduce((sum, value) => sum + value, 0)) : "Non disponible", x.revenuePartial ? "Journée partielle" : "Dernière partition disponible"),
+        kpi("◷", "purple", "Date revenu source", labelDate(x.revenueDate), x.revenuePartial ? "Partition potentiellement partielle" : "Dernière journée disponible")
+      ].join("");
+      document.getElementById("geo-clients").innerHTML = customers.length ? customers.map(([name, amount]) => {
+        const width = maxCustomers ? amount / maxCustomers * 100 : 0;
+        return `<div class="geo-row"><span class="geo-name">${safe(name)}</span><div class="stack-track"><div class="stack-fill" style="width:${width}%"></div></div><span class="geo-value">${fmt.format(amount)}</span></div>`;
+      }).join("") : `<div class="note">Aucun distinct géographique disponible pour la dernière partition.</div>`;
+      document.getElementById("geo-revenue").innerHTML = revenues.length ? revenues.map(([name, amount]) => {
+        const width = maxRevenue ? amount / maxRevenue * 100 : 0;
+        return `<div class="geo-row"><span class="geo-name">${safe(name)}</span><div class="stack-track"><div class="stack-fill" style="width:${width}%"></div></div><span class="geo-value">${fmt.format(amount)}</span></div>`;
+      }).join("") : `<div class="note">Aucun revenu géographique disponible.</div>`;
+      document.getElementById("geo-snapshot-tag").textContent = `GÉOGRAPHIE · ${labelDate(x.customerDate || x.revenueDate)}`;
+      document.getElementById("geographic-source").textContent =
+        `Source des indicateurs : itbi_ess.datamart_refill_loc_vw · revenus et distincts par département ${labelDate(x.customerDate || x.revenueDate)}${x.revenuePartial ? " · journée partielle" : ""}. Limites administratives : geoBoundaries / Wikimedia Commons, année représentée 2012 · domaine public. Les distincts départementaux peuvent se chevaucher; le total national est calculé séparément.`;
+      renderGeographyMap();
+    }
+
+    function normalizeDepartment(value) {
+      const normalized = String(value || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
+      return ({ kouffo: "couffo", atlanique: "atlantique", atakora: "atacora" })[normalized] || normalized;
+    }
+
+    function departmentLabel(value) {
+      const normalized = normalizeDepartment(value);
+      return ({ couffo: "Couffo", atlantique: "Atlantique", oueme: "Ouémé", atacora: "Atacora" })[normalized] || value;
+    }
+
+    function coordinatePairs(coordinates, result = []) {
+      if (!Array.isArray(coordinates)) return result;
+      if (typeof coordinates[0] === "number") {
+        result.push(coordinates);
+      } else {
+        coordinates.forEach(point => coordinatePairs(point, result));
+      }
+      return result;
+    }
+
+    function renderGeographyMap() {
+      const map = document.getElementById("benin-map");
+      const geographic = DATA.geographic;
+      const values = geographic[geographicMetric] || {};
+      const metricLabel = geographicMetric === "revenue" ? "Revenu · FCFA" : "Rechargeurs distincts";
+      const metricDate = geographicMetric === "revenue" ? geographic.revenueDate : geographic.customerDate;
+      document.querySelectorAll(".geo-metric-button").forEach(button => {
+        const selected = button.dataset.geoMetric === geographicMetric;
+        button.classList.toggle("active", selected);
+        button.setAttribute("aria-pressed", String(selected));
+      });
+      document.getElementById("geo-map-caption").textContent =
+        `Limites des départements · ${metricLabel} · partition ${labelDate(metricDate)}${geographic.revenuePartial ? " · journée partielle" : ""}. Teinte : rang relatif entre départements.`;
+      if (!beninBoundaries) {
+        map.innerHTML = `<div class="note">Carte administrative indisponible. ${safe(map.dataset.error || "Chargement des limites en cours.")}</div>`;
+        return;
+      }
+
+      const features = Array.isArray(beninBoundaries.features) ? beninBoundaries.features : [];
+      const positions = features.flatMap(feature => coordinatePairs(feature.geometry?.coordinates));
+      if (!features.length || !positions.length) {
+        map.innerHTML = `<div class="note">Le fichier des limites administratives ne contient aucune géométrie exploitable.</div>`;
+        return;
+      }
+      const longitudes = positions.map(point => point[0]);
+      const latitudes = positions.map(point => point[1]);
+      const minLongitude = Math.min(...longitudes);
+      const maxLongitude = Math.max(...longitudes);
+      const minLatitude = Math.min(...latitudes);
+      const maxLatitude = Math.max(...latitudes);
+      const width = 500;
+      const height = 680;
+      const padding = 14;
+      const scale = Math.min(
+        (width - padding * 2) / (maxLongitude - minLongitude),
+        (height - padding * 2) / (maxLatitude - minLatitude)
+      );
+      const offsetX = (width - (maxLongitude - minLongitude) * scale) / 2;
+      const offsetY = (height - (maxLatitude - minLatitude) * scale) / 2;
+      const project = ([longitude, latitude]) => [
+        offsetX + (longitude - minLongitude) * scale,
+        height - offsetY - (latitude - minLatitude) * scale
+      ];
+      const observed = Object.values(values).filter(value => Number.isFinite(Number(value))).map(Number);
+      const rankedValues = [...new Set(observed)].sort((a, b) => a - b);
+      const colors = ["#463016", "#61370f", "#85470c", "#ad5b08", "#d5780c", "#ffb62e"];
+      const shapes = features.map(feature => {
+        const rawName = feature.properties?.shapeName || "";
+        const name = departmentLabel(rawName);
+        const key = normalizeDepartment(rawName);
+        const entry = Object.entries(values).find(([department]) => normalizeDepartment(department) === key);
+        const value = entry?.[1] == null ? null : Number(entry[1]);
+        const valueRank = value == null ? -1 : rankedValues.indexOf(value);
+        const colorIndex = valueRank < 0 || !rankedValues.length
+          ? -1
+          : Math.min(colors.length - 1, Math.floor(valueRank / rankedValues.length * colors.length));
+        const fill = colorIndex < 0 ? "#18202b" : colors[colorIndex];
+        const displayValue = value == null
+          ? "Non disponible"
+          : geographicMetric === "revenue" ? fcf(value) : number(value);
+        const polygons = feature.geometry?.type === "Polygon"
+          ? [feature.geometry.coordinates]
+          : feature.geometry?.type === "MultiPolygon" ? feature.geometry.coordinates : [];
+        const path = polygons.flatMap(polygon => polygon.map(ring => {
+          const projected = ring.map(project);
+          return projected.map(([x, y], index) => `${index ? "L" : "M"}${x.toFixed(1)},${y.toFixed(1)}`).join(" ") + " Z";
+        })).join(" ");
+        return `<path class="benin-department" d="${path}" fill="${fill}" tabindex="0" role="img" aria-label="${safe(name)} · ${safe(metricLabel)} : ${safe(displayValue)}"><title>${safe(name)} · ${safe(metricLabel)} : ${safe(displayValue)}</title></path>`;
+      }).join("");
+      const mapLabel = geographicMetric === "revenue" ? "Revenu par département au Bénin" : "Rechargeurs distincts par département au Bénin";
+      map.innerHTML = `<svg viewBox="0 0 ${width} ${height}" role="img" aria-label="${mapLabel}" preserveAspectRatio="xMidYMid meet"><g>${shapes}</g></svg>`;
+    }
+
+    async function loadBeninBoundaries() {
+      const map = document.getElementById("benin-map");
+      try {
+        const response = await fetch("/static/benin_departments.geojson", { cache: "force-cache" });
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        const boundaries = await response.json();
+        if (boundaries.type !== "FeatureCollection" || !Array.isArray(boundaries.features)) {
+          throw new Error("Format GeoJSON invalide.");
+        }
+        beninBoundaries = boundaries;
+        renderGeographyMap();
+      } catch (error) {
+        const message = error instanceof Error ? error.message : "Erreur inconnue";
+        map.dataset.error = `Échec du chargement des limites du Bénin (${message}).`;
+        renderGeographyMap();
+      }
+    }
+
+    function renderMomo() {
+      const x = DATA.momo;
+      const momoTrend = x.trend || [];
+      document.getElementById("momo-kpis").innerHTML = [
+        kpi("♙", "orange", "Utilisateurs actifs · partition", number(x.mau), labelDate(x.date)),
+        kpi("⌁", "blue", "Transactions", number(x.transactions)),
+        kpi("▱", "green", "Volume traité", fcf(x.volume)),
+        kpi("¤", "purple", "Frais agrégés", fcf(x.fees), "Champ fees de la source")
+      ].join("");
+      document.getElementById("momo-notes").innerHTML = [
+        `<article class="card info-card"><h2>Usage & fréquence</h2><span class="big-number">${x.txPerUser == null ? "Non disponible" : `${number(x.txPerUser, fmt2)} tx / utilisateur`}</span><p>Moyenne calculée depuis les totaux de la partition Mobile Money.</p><p style="margin-top:9px">Panier moyen : <b>${fcf(x.avgTransaction)}</b></p></article>`,
+        `<article class="card info-card"><h2>Monétisation · taux de frais</h2><span class="big-number">${pct(x.feeRate)}</span><p>Taux non fourni par l’agrégat.</p><p style="margin-top:9px">Frais par utilisateur : <b>${fcf(x.revenuePerUser)}</b></p></article>`
+      ].join("");
+      renderTrend("momo-trend", momoTrend, {
+        valueKey: "amount",
+        highlightIndex: momoTrend.length - 1,
+        ariaLabel: "Volume Mobile Money, tendance journalière sur sept jours"
+      });
+      document.getElementById("momo-trend-period").textContent = momoTrend.length
+        ? `FCFA · ${dateFr(momoTrend[0].date)}–${dateFr(momoTrend.at(-1).date)}`
+        : "Aucune partition journalière disponible";
+      const operations = x.operations || [];
+      document.getElementById("momo-breakdown").innerHTML = operations.length ? `
+        <table><thead><tr><th>Type source</th><th>Distincts · type</th><th>Transactions</th><th>Volume · FCFA</th><th>Frais · FCFA</th></tr></thead>
+        <tbody>${operations.map(item => `<tr><td class="td-strong">${safe(item.type)}</td><td class="mono">${number(item.users)}</td><td class="mono">${number(item.transactions)}</td><td class="mono">${fcf(item.volume)}</td><td class="mono">${fcf(item.fees)}</td></tr>`).join("")}</tbody></table>` :
+        `<div class="note" style="margin:13px">Détail par opération indisponible pour cette partition.</div>`;
+      document.getElementById("momo-breakdown-date").textContent = labelDate(x.date);
+      document.getElementById("momo-snapshot-tag").textContent = `MOBILE MONEY · ${labelDate(x.date)}`;
+      document.getElementById("momo-source").textContent =
+        `Source : mfs_bi.fact_momo_all · partition ${labelDate(x.date)}.`;
+    }
+
+    function renderComplaints() {
+      const x = DATA.complaints;
+      const period = x.periodStart && x.periodEnd
+        ? `${dateFr(x.periodStart)}–${dateFr(x.periodEnd)}`
+        : "période indisponible";
+      document.getElementById("complaint-kpis").innerHTML = x.available ? [
+        kpi("△", "red", "Tickets enregistrés", number(x.tickets)),
+        kpi("♙", "orange", "Clients avec ticket", number(x.ticketClients)),
+        kpi("▤", "blue", "Conversations YelloChat", number(x.conversations)),
+        kpi("♧", "green", "Clients YelloChat", number(x.conversationClients))
+      ].join("") : `<div class="note">Non disponible · agrégats récents absents de l’extraction.</div>`;
+      document.getElementById("complaint-details").innerHTML = [
+        x.available ? `<article class="card info-card"><h2>Tickets · trouble ticket</h2><span class="big-number">${number(x.tickets)}</span><p>${number(x.ticketClients)} clients distincts · partition source ${labelDate(x.ticketSourceDate)}.</p></article>` : "",
+        x.available ? `<article class="card info-card"><h2>Conversations · YelloChat</h2><span class="big-number">${number(x.conversations)}</span><p>${number(x.conversationClients)} numéros distincts · partition source ${labelDate(x.conversationSourceDate)}.</p></article>` : ""
+      ].join("");
+      renderTrend("ticket-daily-trend", x.ticketTrend || [], {
+        valueKey: "count",
+        valueFormatter: number,
+        labelInterval: 6,
+        highlightIndex: (x.ticketTrend || []).length - 1,
+        ariaLabel: "Nombre quotidien de tickets sur 30 jours"
+      });
+      renderTrend("conversation-daily-trend", x.conversationTrend || [], {
+        valueKey: "count",
+        valueFormatter: number,
+        labelInterval: 6,
+        highlightIndex: (x.conversationTrend || []).length - 1,
+        ariaLabel: "Nombre quotidien de conversations YelloChat sur 30 jours"
+      });
+      const statusRows = x.available ? (x.ticketStatuses || []) : [];
+      document.getElementById("ticket-status-breakdown").innerHTML = statusRows.length ? `
+        <table><thead><tr><th>Statut source</th><th>Tickets</th><th>Part des tickets</th></tr></thead>
+        <tbody>${statusRows.map(row => `<tr><td class="td-strong">${safe(row.status)}</td><td class="mono">${number(row.tickets)}</td><td class="mono">${x.tickets ? pct(row.tickets / x.tickets * 100) : "Non disponible"}</td></tr>`).join("")}</tbody></table>` :
+        `<div class="note" style="margin:13px">Ventilation par statut indisponible pour cette extraction.</div>`;
+      document.getElementById("ticket-status-date").textContent = labelDate(x.ticketSourceDate);
+      document.getElementById("complaint-snapshot-tag").textContent = x.available
+        ? `SUPPORT · ${period}`
+        : "SUPPORT · NON DISPONIBLE";
+      document.getElementById("complaint-period").textContent = x.available
+        ? `30 jours complets · ${period}`
+        : "Comptages source · période indisponible";
+      document.getElementById("complaint-quality-note").textContent = x.available
+        ? "Tickets et conversations proviennent de systèmes distincts. Les clients distincts ne sont pas additionnés entre sources et ne représentent pas nécessairement des personnes uniques."
+        : "Aucun agrégat récent disponible. Aucun total ancien n’est présenté comme courant.";
+      document.getElementById("complaint-source").textContent =
+        `Sources : feeds.trouble_ticket · partition ${labelDate(x.ticketSourceDate)} · feeds.yellochat_conversations · partition ${labelDate(x.conversationSourceDate)}.`;
+    }
+
+    function renderServices() {
+      const list = DATA.services.items;
+      const trend = DATA.services.trend || [];
+      const max = Math.max(0, ...list.map(item => item.amount || 0));
+      document.getElementById("service-count").textContent = `${list.length} offres / services`;
+      document.getElementById("service-date").textContent = labelDate(DATA.services.date);
+      document.getElementById("service-date-note").textContent =
+        DATA.services.partial
+          ? "Journée en cours, partition potentiellement partielle; activations non assimilées à des clients uniques."
+          : "Partition journalière disponible; activations non assimilées à des clients uniques.";
+      document.getElementById("service-trend-period").textContent = trend.length
+        ? `${dateFr(trend[0].date)}–${dateFr(trend[trend.length - 1].date)} · partition par jour`
+        : "Tendance non disponible dans ce snapshot";
+      renderTrend("service-amount-trend", trend, {
+        valueKey: "amount",
+        labelInterval: 1,
+        ariaLabel: "Montant quotidien des activations de services sur sept jours"
+      });
+      renderTrend("service-activation-trend", trend, {
+        valueKey: "activations",
+        valueFormatter: number,
+        labelInterval: 1,
+        ariaLabel: "Nombre quotidien d’activations de services sur sept jours"
+      });
+      document.getElementById("service-list").innerHTML = list.map(item => {
+        const width = max ? item.amount / max * 100 : 0;
+        return `<div class="service-item"><div><span class="service-name">${safe(item.name)}</span><span class="service-code">${safe(item.code)} · ${fmt.format(item.activations)} activations</span></div><div class="service-bar"><i style="width:${width}%"></i></div><span class="service-n">≈ ${fmt.format(item.clients)} distincts</span><span class="service-n">${fmt.format(item.amount)} FCFA</span></div>`;
+      }).join("");
+      document.getElementById("services-snapshot-tag").textContent = `AIR REFILL · ${labelDate(DATA.services.date)}`;
+      document.getElementById("services-source").textContent = `Source : feeds.air_refill_ma · partition ${labelDate(DATA.services.date)} · montants en FCFA selon la source.`;
+    }
+
+    function snapshotDate() {
+      if (!DATA.generatedAt) return new Date();
+      const parsed = new Date(DATA.generatedAt);
+      return Number.isNaN(parsed.getTime()) ? new Date(0) : parsed;
+    }
+
+    function snapshotAgeDays() {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      return Math.max(0, Math.floor((today - snapshotDate()) / 86400000));
+    }
+
+    function renderSystem() {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const ageDays = snapshotAgeDays();
+      const generatedLabel = snapshotDate().toLocaleDateString("fr-FR", { day: "2-digit", month: "long", year: "numeric" });
+      const generatedTime = snapshotDate().toLocaleString("fr-FR");
+      const light = document.querySelector(".status-light");
+      light.classList.toggle("fresh", DATA.live === true);
+      light.classList.toggle("stale", DATA.live !== true);
+      document.getElementById("source-status").textContent = DATA.live
+        ? `Snapshot Presto · ${labelDate(DATA.executive.date)}`
+        : DATA.generatedAt ? `Snapshot archivé · ${ageDays} j` : "Données non chargées";
+      document.getElementById("snapshot-age").textContent = DATA.generatedAt
+        ? `EXTRACTION ${generatedLabel.toUpperCase()} · ${generatedTime}`
+        : "AUCUN SNAPSHOT CHARGÉ";
+      document.getElementById("system-snapshot-age").textContent = DATA.generatedAt
+        ? `EXTRACTION ${generatedLabel.toUpperCase()} · ${ageDays} J`
+        : "AUCUN SNAPSHOT CHARGÉ";
+      document.getElementById("system-kpis").innerHTML = [
+        kpi("◷", "orange", "Dernière extraction", DATA.generatedAt ? generatedLabel : "Non disponible", DATA.generatedAt ? generatedTime : ""),
+        kpi("↻", "blue", "Dernière partition revenu", labelDate(DATA.executive.date), "Source itbi_ess.prod_kpis_revenu"),
+        kpi("◈", "purple", "Sources déclarées", number(DATA.sources.length), "Chaque module affiche son état"),
+        kpi("!", DATA.live ? "green" : "red", "Snapshot Presto", DATA.live ? "Disponible" : "Non chargé", DATA.live ? "La connexion source courante n’est pas garantie" : "Ouvrir via le serveur local puis actualiser")
+      ].join("");
+      document.getElementById("freshness-table").innerHTML = `<div class="fresh-row"><span>MODULE</span><span>SOURCE</span><span>DATE DE DONNÉES</span><span>ÉTAT</span></div>` + DATA.sources.map(row =>
+        `<div class="fresh-row"><span>${safe(row.module)}</span><span>${safe(row.table)}</span><span>${safe(labelDate(row.date))}</span><span class="freshness-status">${safe(row.state)}</span></div>`
+      ).join("");
+    }
+
+    function renderDocs() {
+      document.getElementById("docs-grid").innerHTML = [
+        ["Sources agrégées disponibles", "Presto alimente les indicateurs exécutifs, les inscriptions, le revenu géographique, Mobile Money et les services."],
+        ["Montants & devises", "Les valeurs de revenu et de volume sont présentées en FCFA quand la source et les captures d’interface l’indiquent. Toute unité ambiguë doit être confirmée avec la source métier."],
+        ["Population & couverture", "Les SIM enregistrées, les clients uniques quotidiens et les utilisateurs MoMo observés dans une partition sont des périmètres différents. Les SIM ne correspondent pas nécessairement à des personnes distinctes."],
+        ["Données manquantes", "Une valeur absente reste « non disponible ». Une jointure absente n’est pas transformée en zéro et une date partielle est signalée."],
+        ["Période des données", "Chaque module indique sa propre date de partition Presto; les dates peuvent différer selon la latence de la source."],
+        ["Fraîcheur", DATA.generatedAt
+          ? `Dernière extraction : ${new Date(DATA.generatedAt).toLocaleString("fr-FR")}. Les partitions et les modules non actualisés sont détaillés dans Système.`
+          : "Aucune donnée n’est embarquée. Les indicateurs sont chargés depuis l’API locale Presto."]
+      ].map(([title, text]) => `<article class="card info-card"><h2>${safe(title)}</h2><p>${safe(text)}</p></article>`).join("");
+    }
+
+    const csvModules = {
+      executive: {
+        filename: `mtn-executive-snapshot-${DATA.generatedDate}.csv`,
+        rows: () => [["metric", "value", "date"], ["total_revenue_fcfa", DATA.executive.totalRevenue, DATA.executive.date], ["revenue_change_vs_previous_day_fcfa", DATA.executive.dayOverDay?.revenueDelta ?? "", DATA.executive.dayOverDay?.previousDate ?? ""], ["revenue_change_vs_previous_day_pct", DATA.executive.dayOverDay?.revenuePercentChange == null ? "" : DATA.executive.dayOverDay.revenuePercentChange * 100, DATA.executive.dayOverDay?.previousDate ?? ""], ["transactions", DATA.executive.totalTransactions, DATA.executive.date], ["unique_customers_daily", DATA.executive.uniqueCustomers, DATA.executive.date], ["registered_sims_not_unique_people", DATA.executive.totalSims, DATA.executive.date], ["activated_sims", DATA.executive.activatedSims, DATA.executive.date], ["arpu_derived_fcfa", DATA.executive.arpu, DATA.executive.date]]
+      },
+      realtime: {
+        filename: `mtn-realtime-hourly-${DATA.generatedDate}.csv`,
+        rows: () => [
+          ["metric", "value", "timestamp"],
+          ["revenue_change_vs_previous_hour_fcfa", DATA.realtime_hourly.hour_over_hour?.revenueDelta ?? "", DATA.realtime_hourly.previous_hour?.timestamp ?? ""],
+          ["revenue_change_vs_previous_hour_pct", DATA.realtime_hourly.hour_over_hour?.revenuePercentChange == null ? "" : DATA.realtime_hourly.hour_over_hour.revenuePercentChange * 100, DATA.realtime_hourly.previous_hour?.timestamp ?? ""],
+          ["transactions_change_vs_previous_hour", DATA.realtime_hourly.hour_over_hour?.transactionsDelta ?? "", DATA.realtime_hourly.previous_hour?.timestamp ?? ""],
+          ...DATA.realtime_hourly.hours.map(row => ["hourly_revenue_fcfa", row.revenue ?? "", row.timestamp]),
+          ...DATA.realtime_hourly.hours.map(row => ["hourly_transactions", row.transactions ?? "", row.timestamp])
+        ]
+      },
+      recruitment: {
+        filename: `mtn-recruitment-${DATA.generatedDate}.csv`,
+        rows: () => [["metric", "value", "date"], ["daily_registrations", DATA.recruitment.daily, DATA.recruitment.date], ["weekly_registrations", DATA.recruitment.weekly, DATA.recruitment.date], ["monthly_registrations", DATA.recruitment.monthly, DATA.recruitment.date], ["total_registrations", DATA.recruitment.totalRegistrations, DATA.recruitment.date]]
+      },
+      geographic: {
+        filename: `mtn-geographic-snapshot-${DATA.generatedDate}.csv`,
+        rows: () => [["department", "distinct_daily_recharge_users", "revenue_fcfa", "date"], ["NATIONAL_DISTINCT", DATA.geographic.totalCustomers, "", DATA.geographic.customerDate], ...[...new Set([...Object.keys(DATA.geographic.customers), ...Object.keys(DATA.geographic.revenue)])].map(name => [name, DATA.geographic.customers[name] ?? "", DATA.geographic.revenue[name] ?? "", DATA.geographic.customerDate])]
+      },
+      momo: {
+        filename: `mtn-mobile-money-${DATA.generatedDate}.csv`,
+        rows: () => [["metric_or_operation", "users_distinct_within_operation", "transactions", "volume_fcfa", "fees_fcfa", "date"], ["total", DATA.momo.mau, DATA.momo.transactions, DATA.momo.volume, DATA.momo.fees, DATA.momo.date], ...(DATA.momo.operations || []).map(row => [row.type, row.users, row.transactions, row.volume, row.fees, DATA.momo.date]), ...(DATA.momo.trend || []).map(row => ["daily_total", row.users, row.transactions, row.amount, row.fees, row.date])]
+      },
+      complaints: {
+        filename: `mtn-customer-service-${DATA.generatedDate}.csv`,
+        rows: () => [["metric", "count", "period_start", "period_end", "source_partition"], ["tickets", DATA.complaints.tickets, DATA.complaints.periodStart, DATA.complaints.periodEnd, DATA.complaints.ticketSourceDate], ...((DATA.complaints.ticketStatuses || []).map(row => [`ticket_status:${row.status}`, row.tickets, DATA.complaints.periodStart, DATA.complaints.periodEnd, DATA.complaints.ticketSourceDate])), ...((DATA.complaints.ticketTrend || []).map(row => ["daily_tickets", row.count ?? "", row.date, row.date, DATA.complaints.ticketSourceDate])), ["ticket_clients_distinct", DATA.complaints.ticketClients, DATA.complaints.periodStart, DATA.complaints.periodEnd, DATA.complaints.ticketSourceDate], ["yellochat_conversations", DATA.complaints.conversations, DATA.complaints.periodStart, DATA.complaints.periodEnd, DATA.complaints.conversationSourceDate], ...((DATA.complaints.conversationTrend || []).map(row => ["daily_yellochat_conversations", row.count ?? "", row.date, row.date, DATA.complaints.conversationSourceDate])), ["yellochat_msisdn_distinct", DATA.complaints.conversationClients, DATA.complaints.periodStart, DATA.complaints.periodEnd, DATA.complaints.conversationSourceDate]]
+      },
+      services: {
+        filename: `mtn-services-${DATA.generatedDate}.csv`,
+        rows: () => [["metric_or_code", "service", "activations", "approx_distinct_clients", "amount_fcfa", "date", "partition_status"], ...DATA.services.items.map(row => [row.code, row.name, row.activations, row.clients, row.amount, DATA.services.date, DATA.services.partial ? "partial" : "complete"]), ...(DATA.services.trend || []).map(row => ["daily_total", "", row.activations ?? "", "", row.amount ?? "", row.date, row.date === DATA.services.date && DATA.services.partial ? "partial" : "complete"])]
+      },
+      system: {
+        filename: `mtn-source-freshness-${DATA.generatedDate}.csv`,
+        rows: () => [["module", "source", "data_date", "status"], ...DATA.sources.map(row => [row.module, row.table, row.date, row.state])]
+      }
+    };
+
+    let activeView = "executive";
+    let refreshInProgress = false;
+    function switchView(viewName) {
+      const view = document.getElementById(`view-${viewName}`);
+      if (!view) return;
+      activeView = viewName;
+      document.querySelectorAll(".view").forEach(section => section.classList.toggle("active", section === view));
+      document.querySelectorAll(".tab[data-view]").forEach(button => button.classList.toggle("active", button.dataset.view === viewName));
+      const selectedTab = document.querySelector(`.tab[data-view="${viewName}"]`);
+      if (selectedTab) selectedTab.scrollIntoView({ block: "nearest", inline: "nearest", behavior: "smooth" });
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+
+    function notify(message) {
+      const toast = document.getElementById("toast");
+      toast.textContent = message;
+      toast.hidden = false;
+      clearTimeout(notify.timer);
+      notify.timer = setTimeout(() => { toast.hidden = true; }, 3200);
+    }
+
+    function showFreshnessMessage(message, isError = false) {
+      const banner = document.getElementById("freshness-message");
+      banner.classList.toggle("error", isError);
+      banner.innerHTML = `<span class="banner-icon">${isError ? "!" : "ⓘ"}</span><span><strong>${isError ? "Actualisation impossible :" : "État des données :"}</strong> ${safe(message)}</span>`;
+    }
+
+    function applySnapshot(snapshot) {
+      if (!snapshot || snapshot.schema_version !== 1 || !snapshot.executive || !Array.isArray(snapshot.sources)) {
+        throw new Error("Format de snapshot marketing invalide.");
+      }
+      Object.assign(DATA, snapshot);
+      DATA.generatedAt = snapshot.generated_at;
+      DATA.generatedDate = snapshot.generated_at.slice(0, 10).replaceAll("-", "");
+      DATA.live = snapshot.status === "fresh";
+      renderExecutive();
+      renderRealtime();
+      renderRecruitment();
+      renderGeography();
+      renderMomo();
+      renderComplaints();
+      renderServices();
+      renderSystem();
+      renderDocs();
+      showSnapshotFreshness();
+    }
+
+    function showSnapshotFreshness() {
+      const unavailable = DATA.sources
+        .filter(source => source.state.startsWith("Non rafraîchi") || source.state.startsWith("Non disponible") || source.state.startsWith("Retard") || source.state.startsWith("Journée partielle"))
+        .map(source => `${source.module} (${source.state})`);
+      showFreshnessMessage(
+        `Snapshot extrait depuis Presto le ${new Date(DATA.generatedAt).toLocaleString("fr-FR")}. Modules à surveiller : ${unavailable.length ? unavailable.join(", ") : "aucun"}.`
+      );
+    }
+
+    async function getSnapshot() {
+      const response = await fetch("/api/metrics", { cache: "no-store" });
+      const payload = await response.json();
+      if (!response.ok) throw new Error(payload.error || `Erreur HTTP ${response.status}`);
+      if (payload.generated_at !== DATA.generatedAt) applySnapshot(payload);
+      return payload;
+    }
+
+    async function refreshSnapshot() {
+      if (refreshInProgress) return;
+      refreshInProgress = true;
+      const button = document.getElementById("refresh-button");
+      button.disabled = true;
+      button.title = "Rafraîchissement Presto en cours";
+      showFreshnessMessage("Interrogation des partitions Presto récentes en cours. Les autres modules continuent d’afficher leur statut de fraîcheur.");
+      try {
+        const response = await fetch("/api/refresh", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: "{}",
+          cache: "no-store"
+        });
+        const result = await response.json();
+        if (!response.ok) throw new Error(result.error || `Erreur HTTP ${response.status}`);
+        await getSnapshot();
+        await syncServerState();
+        notify("Snapshot marketing actualisé depuis Presto.");
+      } catch (error) {
+        const message = error instanceof Error ? error.message : "Erreur inconnue";
+        showFreshnessMessage(message, true);
+        notify(`Actualisation impossible : ${message}`);
+      } finally {
+        refreshInProgress = false;
+        button.disabled = false;
+        button.title = "Actualiser les données depuis Presto";
+      }
+    }
+
+    async function syncServerState() {
+      if (document.hidden) return;
+      try {
+        await getSnapshot();
+        const response = await fetch("/api/health", { cache: "no-store" });
+        const health = await response.json();
+        if (!response.ok) throw new Error(health.error || `Erreur HTTP ${response.status}`);
+        const refresh = health.refresh || {};
+        if (refresh.last_error) {
+          const attempted = refresh.last_attempt_at
+            ? new Date(refresh.last_attempt_at).toLocaleString("fr-FR")
+            : "heure inconnue";
+          showFreshnessMessage(
+            `Dernière actualisation Presto échouée (${attempted}) : ${refresh.last_error} Le dernier snapshot valide est conservé.`,
+            true
+          );
+        } else if (refresh.in_progress) {
+          const snapshotLabel = health.snapshot_generated_at
+            ? new Date(health.snapshot_generated_at).toLocaleString("fr-FR")
+            : "encore indisponible";
+          showFreshnessMessage(
+            `Actualisation automatique Presto en cours. Le dernier snapshot publié (${snapshotLabel}) reste disponible pendant l’extraction.`
+          );
+        } else {
+          showSnapshotFreshness();
+        }
+      } catch (error) {
+        const message = error instanceof Error ? error.message : "Erreur inconnue";
+        showFreshnessMessage(`Impossible de vérifier l’actualisation automatique : ${message}`, true);
+      }
+    }
+
+    async function loadSnapshot() {
+      try {
+        await getSnapshot();
+        await syncServerState();
+      } catch (error) {
+        const message = error instanceof Error ? error.message : "Erreur inconnue";
+        if (message.includes("Aucun snapshot Presto")) {
+          showFreshnessMessage(
+            "Aucun snapshot n’est encore publié. Le serveur lance automatiquement une extraction Presto; cette page vérifiera à nouveau dans une minute."
+          );
+        } else {
+          showFreshnessMessage(`${message} Ouvrez la plateforme via scripts/run_dashboard.ps1.`, true);
+        }
+      }
+    }
+
+    function exportCurrentView() {
+      const data = csvModules[activeView];
+      if (!data) {
+        notify("Aucun export n’est disponible pour ce module.");
+        return;
+      }
+      if (activeView === "complaints" && !DATA.complaints.available) {
+        notify("Aucun export : les sources de plaintes ne sont pas actualisées.");
+        return;
+      }
+      const safeCsv = data.rows().map(row => row.map(value => {
+        const raw = value ?? "";
+        const cell = typeof raw === "string" && /^[\t\r ]*[=+\-@]/.test(raw) ? `'${raw}` : raw;
+        return `"${String(cell).replaceAll('"', '""')}"`;
+      }).join(",")).join("\r\n");
+      const blob = new Blob(["\uFEFF" + safeCsv], { type: "text/csv;charset=utf-8" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      const exportDate = DATA.generatedDate || new Date().toISOString().slice(0, 10).replaceAll("-", "");
+      link.download = data.filename.replace(/-(?:\d{8})?\.csv$/, `-${exportDate}.csv`);
+      document.body.append(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(url);
+      notify("Export du module téléchargé.");
+    }
+
+    document.querySelectorAll(".tab[data-view]").forEach(tab => tab.addEventListener("click", () => switchView(tab.dataset.view)));
+    document.querySelectorAll(".geo-metric-button").forEach(button => button.addEventListener("click", () => {
+      geographicMetric = button.dataset.geoMetric;
+      renderGeographyMap();
+    }));
+    document.getElementById("export-button").addEventListener("click", exportCurrentView);
+    document.getElementById("refresh-button").addEventListener("click", () => refreshSnapshot());
+    document.addEventListener("visibilitychange", syncServerState);
+    window.setInterval(syncServerState, SERVER_STATUS_POLL_INTERVAL_MS);
+    renderExecutive();
+    renderRealtime();
+    renderRecruitment();
+    renderGeography();
+    renderMomo();
+    renderComplaints();
+    renderServices();
+    renderSystem();
+    renderDocs();
+    loadBeninBoundaries();
+    loadSnapshot();
+  </script>
+</body>
+</html>
