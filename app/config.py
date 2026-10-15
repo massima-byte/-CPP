@@ -65,3 +65,9 @@ def marketing_refresh_interval_seconds() -> int:
     if value < 60:
         raise ValueError("MTN_MARKETING_REFRESH_INTERVAL_SECONDS doit être au moins 60.")
     return value
+
+
+def access_database_path() -> Path:
+    load_local_environment()
+    value = os.environ.get("MTN_MARKETING_ACCESS_DB")
+    return Path(value).expanduser() if value else DATA_DIR / "marketing_access.sqlite3"

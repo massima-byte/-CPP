@@ -4,8 +4,8 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#08090d">
-  <meta name="description" content="MTN Enterprise Intelligence — suivi marketing, commercial et opérationnel à partir d'indicateurs consolidés du Bénin.">
-  <title>MTN Enterprise Intelligence</title>
+  <meta name="description" content="MTN Marketing Intelligence — indicateurs marketing et performance commerciale du Bénin.">
+  <title>MTN Marketing Intelligence</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -28,6 +28,14 @@
       --pink: #f04599;
       --cyan: #03bed1;
       --red: #ff5864;
+      --surface-inset: #151e2b;
+      --surface-inset-border: #242d3a;
+      --surface-input: #0c111a;
+      --control-border: #2b3340;
+      --track: #222b38;
+      --table-divider: rgb(35 42 53 / 76%);
+      --table-text: #aab4c2;
+      --table-head: #697588;
       --radius: 18px;
       font-family: "DM Sans", sans-serif;
       background: var(--bg);
@@ -44,6 +52,21 @@
     button, input, select { font: inherit; }
     button { color: inherit; }
     .shell { min-height: 100vh; }
+    .login-screen { display: grid; min-height: 100vh; place-items: center; padding: 24px; background: radial-gradient(ellipse 50% 40% at 50% 0%, rgb(255 153 35 / 12%), transparent 80%), var(--bg); }
+    .login-screen[hidden], .shell[hidden] { display: none; }
+    .login-panel { width: min(100%, 420px); padding: 27px; border: 1px solid #2b3039; border-radius: 18px; background: linear-gradient(150deg, #151b25, #10141d 78%); box-shadow: 0 24px 80px rgb(0 0 0 / 34%); }
+    .login-panel .mtn-mark { margin-bottom: 22px; }
+    .login-panel h1 { margin-bottom: 7px; font-size: 22px; }
+    .login-copy { margin: 0 0 21px; color: var(--muted); font-size: 11px; line-height: 1.6; }
+    .login-form { display: grid; gap: 13px; }
+    .login-form label { display: grid; gap: 6px; color: #aab3c0; font: 10px "DM Mono", monospace; }
+    .login-input { width: 100%; min-height: 44px; padding: 0 12px; border: 1px solid #303846; border-radius: 9px; background: #0b1018; color: var(--text); outline: none; }
+    .login-input:focus { border-color: #a26920; box-shadow: 0 0 0 3px rgb(255 196 0 / 10%); }
+    .login-submit { min-height: 44px; margin-top: 3px; border: 1px solid #8a5d12; border-radius: 9px; background: linear-gradient(120deg, #ffd000, #ff9f00); color: #17130b; font-weight: 800; cursor: pointer; }
+    .login-submit:disabled { opacity: .55; cursor: wait; }
+    .login-error { margin: 0; padding: 10px 11px; border: 1px solid #643039; border-radius: 9px; background: #1d1015; color: #ffc4ca; font-size: 10px; line-height: 1.5; }
+    .login-error.pending { border-color: #31533f; background: #102119; color: #b9e7c8; }
+    .login-error[hidden] { display: none; }
     .masthead {
       position: sticky; top: 0; z-index: 20;
       display: flex; min-height: 66px; align-items: center; justify-content: space-between; gap: 18px;
@@ -73,6 +96,27 @@
     .top-action span { white-space: nowrap; }
     .top-action.icon { width: 38px; padding: 0; font-size: 15px; }
     .meta-pill { padding: 0 12px; color: #929aaa; font: 9px "DM Mono", monospace; }
+    :root[data-theme="light"] { color-scheme: light; --bg:#f3f5f7; --bg-soft:#e9edf0; --panel:#fff; --panel-2:#f4f6f8; --line:#d5dce1; --text:#17212a; --muted:#62717e; --subtle:#435361; --surface-inset:#f4f6f8; --surface-inset-border:#d5dce1; --surface-input:#fff; --control-border:#c8d0d6; --track:#dce2e6; --table-divider:#dfe4e8; --table-text:#435361; --table-head:#53616d; }
+    :root[data-theme="light"] body { background:radial-gradient(ellipse 55% 33% at 95% 14%,rgb(255 120 0 / 8%),transparent 75%),#f3f5f7; }
+    :root[data-theme="light"] .masthead, :root[data-theme="light"] .tabbar { background:rgb(248 250 251 / 96%); border-color:#d9e0e4; }
+    :root[data-theme="light"] .status-chip, :root[data-theme="light"] .top-action { background:#fff; border-color:#d5dce1; color:#435361; }
+    :root[data-theme="light"] .tab { color:#53616d; }
+    :root[data-theme="light"] .tab:hover { background:#e9edf0; color:#17212a; }
+    :root[data-theme="light"] .tab.active { background:#fff0dc; color:#81400b; border-color:#d58b48; }
+    :root[data-theme="light"] .card, :root[data-theme="light"] .panel { background:linear-gradient(150deg,#fff,#f7f9fa 78%); box-shadow:0 11px 35px rgb(20 34 46 / 7%); }
+    :root[data-theme="light"] .hero-revenue { background:radial-gradient(ellipse 36% 75% at 88% 22%,rgb(255 132 0 / 13%),transparent 85%),linear-gradient(125deg,#fff0df,#fff 54%,#f5f7fa); }
+    :root[data-theme="light"] input, :root[data-theme="light"] select { color:var(--text); }
+    :root[data-theme="light"] .login-panel, :root[data-theme="light"] .compare-metric, :root[data-theme="light"] .service-item { border-color:var(--line); background:var(--panel-2); }
+    :root[data-theme="light"] .login-form label { color:var(--subtle); }
+    :root[data-theme="light"] .subtitle, :root[data-theme="light"] .meta-pill, :root[data-theme="light"] .panel-aside, :root[data-theme="light"] .fine-print, :root[data-theme="light"] footer { color:#53616d; }
+    :root[data-theme="light"] .kpi-label { color:#53616d; }
+    :root[data-theme="light"] .trend-grid { stroke:#dce2e6; }
+    :root[data-theme="light"] .trend-axis-label, :root[data-theme="light"] .trend-x-label, :root[data-theme="light"] .geo-map-legend { fill:#53616d; color:#53616d; }
+    :root[data-theme="light"] th { color:var(--table-head); }
+    :root[data-theme="light"] td { color:var(--table-text); border-color:var(--table-divider); }
+    :root[data-theme="light"] .geo-map-controls { border-color:var(--line); background:var(--panel); }
+    :root[data-theme="light"] .geo-metric-button { color:#53616d; }
+    :root[data-theme="light"] .geo-metric-button:hover, :root[data-theme="light"] .geo-metric-button.active { background:#fff0dc; color:#81400b; }
     .tabbar {
       position: sticky; top: 66px; z-index: 19;
       display: flex; min-height: 57px; align-items: center; gap: 5px; overflow-x: auto;
@@ -119,7 +163,7 @@
       border-color: #543011;
       background: radial-gradient(ellipse 36% 75% at 88% 22%, rgb(255 132 0 / 20%), transparent 85%),
         linear-gradient(125deg, #281b14 0%, #181a1e 54%, #10141d 100%);
-    }
+    }         
     .hero-revenue::after { position: absolute; right: -44px; top: -100px; width: 260px; height: 260px; border: 1px solid rgb(255 167 36 / 12%); border-radius: 50%; box-shadow: 0 0 0 27px rgb(255 167 36 / 3%), 0 0 0 56px rgb(255 167 36 / 2%); content: ""; }
     .hero-label { margin: 0 0 20px; color: #a5a5a8; font-size: 10px; font-weight: 700; letter-spacing: .13em; text-transform: uppercase; }
     .hero-value { position: relative; z-index: 1; margin: 0 0 22px; color: #ff9415; font: 800 clamp(32px, 4.7vw, 56px)/1 Manrope, sans-serif; letter-spacing: -.065em; overflow-wrap: anywhere; }
@@ -132,7 +176,7 @@
     .compare-value { margin-bottom: 15px; font: 800 23px Manrope, sans-serif; letter-spacing: -.05em; }
     .compare-sub { margin: -10px 0 18px; color: var(--muted); font-size: 9px; }
     .compare-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
-    .compare-metric { min-height: 71px; padding: 11px; border: 1px solid #242d3a; border-radius: 12px; background: #151e2b; }
+    .compare-metric { min-height: 71px; padding: 11px; border: 1px solid var(--surface-inset-border); border-radius: 12px; background: var(--surface-inset); }
     .compare-metric strong { display: block; font: 700 13px Manrope, sans-serif; }
     .compare-metric span { display: block; margin-top: 5px; color: var(--muted); font-size: 8px; line-height: 1.4; text-transform: uppercase; }
     .kpi-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; margin-top: 14px; }
@@ -173,29 +217,47 @@
     .stack-list { display: grid; gap: 13px; }
     .stack-row { display: grid; grid-template-columns: minmax(75px, 112px) minmax(0, 1fr) 84px; align-items: center; gap: 11px; }
     .stack-name { overflow: hidden; color: var(--subtle); font-size: 9px; text-overflow: ellipsis; white-space: nowrap; }
-    .stack-track { height: 8px; overflow: hidden; border-radius: 9px; background: #222b38; }
+    .stack-track { height: 8px; overflow: hidden; border-radius: 9px; background: var(--track); }
     .stack-fill { height: 100%; border-radius: inherit; background: linear-gradient(90deg, #f88700, #ffc800); }
     .stack-fill.green { background: linear-gradient(90deg, #14975a, #48d88b); }
     .stack-fill.red { background: linear-gradient(90deg, #d6424b, #ff8274); }
-    .stack-number { color: #d6dbe2; font: 9px "DM Mono", monospace; text-align: right; }
+    .stack-number { color: var(--subtle); font: 9px "DM Mono", monospace; text-align: right; }
     .table-card { overflow: hidden; }
     .table-tools { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 13px 16px; border-bottom: 1px solid var(--line); }
     .table-tools strong { font: 700 11px Manrope, sans-serif; }
     .table-tools span { margin-left: 8px; color: var(--muted); font-size: 9px; }
     .tools-right { display: flex; flex-wrap: wrap; gap: 7px; }
     .tool-input, .tool-select, .btn {
-      min-height: 33px; padding: 0 10px; border: 1px solid #2b3340; border-radius: 8px;
-      background: #0c111a; color: var(--text); font-size: 9px;
+      min-height: 33px; padding: 0 10px; border: 1px solid var(--control-border); border-radius: 8px;
+      background: var(--surface-input); color: var(--text); font-size: 9px;
     }
     .tool-input::placeholder { color: #687486; }
     .btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; cursor: pointer; }
     .btn:hover { border-color: #685123; color: var(--yellow); }
     .table-scroll { overflow-x: auto; }
+    .tab[hidden], .admin-panel[hidden], .top-action[hidden] { display: none!important; }
+    .admin-panel-tabs { display: flex; flex-wrap: wrap; gap: 7px; margin: 0 0 16px; border-bottom: 1px solid var(--line); }
+    .admin-panel-tab { min-height: 39px; padding: 0 12px; border: 0; border-bottom: 2px solid transparent; background: transparent; color: var(--muted); font-size: 10px; cursor: pointer; }
+    .admin-panel-tab.active { border-bottom-color: var(--orange); color: var(--text); }
+    .admin-panel { min-width: 0; }
+    .admin-panel-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 0 0 12px; }
+    .admin-panel-head h2 { margin: 0; font: 700 14px Manrope, sans-serif; }
+    .admin-panel-status { color: var(--muted); font: 9px "DM Mono", monospace; }
+    .admin-profile-block { margin: 0 0 19px; padding-bottom: 14px; border-bottom: 1px solid var(--line); }
+    .admin-profile-head { display: flex; align-items: start; justify-content: space-between; gap: 12px; margin-bottom: 9px; }
+    .admin-profile-head h3 { margin: 0 0 4px; font: 700 12px Manrope, sans-serif; }
+    .admin-profile-head p { margin: 0; color: var(--muted); font-size: 9px; }
+    .admin-check { width: 18px; height: 18px; accent-color: var(--orange); }
+    .admin-empty { padding: 25px 14px; color: var(--muted); font-size: 10px; text-align: center; }
+    .admin-actions { display: flex; align-items: center; gap: 6px; }
+    .admin-actions .tool-select, .admin-actions .tool-input { min-width: 120px; }
+    .admin-status-active { color: var(--green)!important; }
+    .admin-status-pending { color: var(--yellow)!important; }
     table { width: 100%; border-collapse: collapse; white-space: nowrap; }
-    th { padding: 11px 14px; border-bottom: 1px solid var(--line); color: #697588; font: 9px "DM Mono", monospace; text-align: left; text-transform: uppercase; }
-    td { padding: 12px 14px; border-bottom: 1px solid rgb(35 42 53 / 76%); color: #aab4c2; font-size: 10px; }
+    th { padding: 11px 14px; border-bottom: 1px solid var(--line); color: var(--table-head); font: 9px "DM Mono", monospace; text-align: left; text-transform: uppercase; }
+    td { padding: 12px 14px; border-bottom: 1px solid var(--table-divider); color: var(--table-text); font-size: 10px; }
     tr:last-child td { border-bottom: 0; }
-    tbody tr:hover td { background: rgb(255 255 255 / 2%); }
+    tbody tr:hover td { background: color-mix(in srgb, var(--text) 4%, transparent); }
     .mono { font-family: "DM Mono", monospace; }
     .td-strong { color: var(--text); font-weight: 700; }
     .subheading { display: flex; align-items: end; justify-content: space-between; gap: 12px; margin: 24px 0 12px; }
@@ -228,10 +290,10 @@
     .card { border-color: #252e3a; background: linear-gradient(145deg, #151c27, #10151e 76%); }
     .kpi { min-height: 148px; }
     .service-list { display: grid; gap: 10px; }
-    .service-item { display: grid; grid-template-columns: minmax(130px, 1.2fr) minmax(70px, .7fr) 70px 88px; align-items: center; gap: 12px; padding: 12px 13px; border: 1px solid #232d3b; border-radius: 11px; background: #131a25; }
+    .service-item { display: grid; grid-template-columns: minmax(130px, 1.2fr) minmax(70px, .7fr) 70px 88px; align-items: center; gap: 12px; padding: 12px 13px; border: 1px solid var(--surface-inset-border); border-radius: 11px; background: var(--surface-inset); }
     .service-name { color: var(--text); font-size: 10px; font-weight: 600; }
     .service-code { display: block; margin-top: 4px; color: var(--muted); font: 8px "DM Mono", monospace; }
-    .service-bar { height: 6px; border-radius: 8px; background: #2a313a; }
+    .service-bar { height: 6px; border-radius: 8px; background: var(--track); }
     .service-bar i { display: block; height: 100%; border-radius: inherit; background: var(--orange); }
     .service-n { color: var(--subtle); font: 9px "DM Mono", monospace; text-align: right; }
     .fresh-table { display: grid; gap: 0; }
@@ -296,6 +358,8 @@
       .identity-title { font-size: 10px; }
       .mtn-mark { width: 63px; }
       .top-action.icon { display: inline-flex; width: 44px; min-height: 44px; }
+      #logout-button { width: 44px; padding: 0; font-size: 0; }
+      #logout-button::after { content: "↗"; font-size: 15px; }
       .grid-4, .kpi-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
       .hero-kpis { gap: 15px; }
       .hero-kpi strong { font-size: 15px; }
@@ -317,15 +381,36 @@
   </style>
 </head>
 <body>
-  <div class="shell">
+  <section class="login-screen" id="login-screen" aria-labelledby="login-title">
+    <div class="login-panel">
+      <div class="mtn-mark" aria-label="MTN">MTN</div>
+      <p class="eyebrow">Accès sécurisé · MTN Bénin</p>
+      <h1 id="login-title">Connexion LDAP</h1>
+      <p class="login-copy">Utilise ton compte professionnel pour accéder aux indicateurs marketing.</p>
+      <form class="login-form" id="login-form" method="post" action="/api/login">
+        <label for="login-username">Identifiant
+          <input class="login-input" id="login-username" name="username" autocomplete="username" required>
+        </label>
+        <label for="login-password">Mot de passe
+          <input class="login-input" id="login-password" name="password" type="password" autocomplete="current-password" required>
+        </label>
+        <p class="login-error" id="login-error" role="alert" hidden></p>
+        <button class="login-submit" id="login-submit" type="submit">Se connecter</button>
+      </form>
+    </div>
+  </section>
+  <div class="shell" id="app-shell" hidden>
     <header class="masthead">
       <div class="identity">
         <div class="mtn-mark" aria-label="MTN">MTN</div>
-        <div><div class="identity-title">Enterprise Intelligence</div><div class="identity-caption">BUSINESS &amp; MARKETING MONITORING · BÉNIN</div></div>
+        <div><div class="identity-title">Marketing Intelligence</div><div class="identity-caption">PERFORMANCE MARKETING · BÉNIN</div></div>
       </div>
       <div class="mast-actions">
         <span class="status-chip"><i class="status-light stale"></i><span class="status-text" id="source-status">Données non actualisées</span></span>
         <span class="meta-pill" id="snapshot-age">SNAPSHOT ARCHIVÉ · 20 AOÛT 2026</span>
+        <span class="meta-pill" id="session-user" aria-label="Compte connecté"></span>
+        <button class="top-action" id="logout-button" type="button" title="Fermer la session" aria-label="Fermer la session"><span>Quitter</span></button>
+        <button class="top-action icon" id="theme-toggle" type="button" title="Passer en thème clair" aria-label="Passer en thème clair">☼</button>
         <button class="top-action icon" id="refresh-button" title="Actualiser les données depuis Presto" aria-label="Actualiser les données depuis Presto">↻</button>
       </div>
     </header>
@@ -344,6 +429,7 @@
       <span class="tab-spacer"></span><span class="tab-group-label">Système</span>
       <button class="tab" data-view="system"><span class="tab-icon">⌘</span>Système</button>
       <button class="tab" data-view="docs"><span class="tab-icon">▣</span>Documentation</button>
+      <button class="tab" data-view="admin" id="admin-tab" hidden><span class="tab-icon">♙</span>Administration</button>
       <span class="tab-spacer"></span>
       <button class="tab export" id="export-button" title="Exporter le module actif en CSV" aria-label="Exporter le module actif en CSV">⇩</button>
     </nav>
@@ -482,6 +568,33 @@
         <div class="subheading"><h2>Documentation associée aux sources</h2><span>Références présentes dans le dossier source</span></div>
         <div class="grid grid-3"><article class="card info-card"><h2>Inventaire des données</h2><p>Référentiel des sources, couverture, limites et périmètres des analyses marketing.</p></article><article class="card info-card"><h2>État du projet</h2><p>Décisions, résultats du pilote de monitoring et contraintes de validation.</p></article><article class="card info-card"><h2>Guide d’interface</h2><p>Principes de lecture et surfaces de l’interface source.</p></article></div>
         <footer>Interface alimentée par les agrégats Presto enregistrés dans le snapshot local.</footer>
+      </section>
+
+      <section class="view" id="view-admin">
+        <div class="page-head"><div><p class="eyebrow">Gouvernance des accès</p><h1>Comptes &amp; rôles</h1><p class="subtitle">Demandes d’accès LDAP, profils, privilèges et journal d’audit de la plateforme.</p></div><span class="snapshot-tag">ADMINISTRATION</span></div>
+        <div class="admin-panel-tabs" role="tablist" aria-label="Gestion des accès">
+          <button class="admin-panel-tab active" type="button" data-admin-panel="requests" role="tab" aria-selected="true">Demandes</button>
+          <button class="admin-panel-tab" type="button" data-admin-panel="users" role="tab" aria-selected="false">Comptes</button>
+          <button class="admin-panel-tab" type="button" data-admin-panel="profiles" role="tab" aria-selected="false">Profils &amp; privilèges</button>
+          <button class="admin-panel-tab" type="button" data-admin-panel="audit" role="tab" aria-selected="false">Journal d’audit</button>
+        </div>
+        <p class="admin-panel-status" id="admin-status" role="status"></p>
+        <section class="admin-panel" id="admin-panel-requests">
+          <div class="admin-panel-head"><h2>Demandes en attente</h2></div>
+          <article class="card table-card"><div class="table-scroll" id="admin-requests"></div></article>
+        </section>
+        <section class="admin-panel" id="admin-panel-users" hidden>
+          <div class="admin-panel-head"><h2>Comptes actifs et suspendus</h2></div>
+          <article class="card table-card"><div class="table-scroll" id="admin-users"></div></article>
+        </section>
+        <section class="admin-panel" id="admin-panel-profiles" hidden>
+          <div class="admin-panel-head"><h2>Matrice des privilèges par profil</h2></div>
+          <div id="admin-profiles"></div>
+        </section>
+        <section class="admin-panel" id="admin-panel-audit" hidden>
+          <div class="admin-panel-head"><h2>Événements récents</h2><span>100 dernières entrées</span></div>
+          <article class="card table-card"><div class="table-scroll" id="admin-audit"></div></article>
+        </section>
       </section>
     </main>
   </div>
@@ -1062,6 +1175,35 @@
 
     let activeView = "executive";
     let refreshInProgress = false;
+    let currentPrivileges = {};
+    let activeAdminPanel = "requests";
+    const ADMIN_PANEL_PRIVILEGES = {
+      requests: "review_account_requests",
+      users: "manage_accounts",
+      profiles: "manage_profiles",
+      audit: "view_audit_logs"
+    };
+
+    function configureAdminPanels(privileges) {
+      const availablePanels = Object.entries(ADMIN_PANEL_PRIVILEGES)
+        .filter(([, privilege]) => privileges[privilege])
+        .map(([panel]) => panel);
+      document.getElementById("admin-tab").hidden = availablePanels.length === 0;
+      document.querySelectorAll(".admin-panel-tab").forEach(button => {
+        button.hidden = !availablePanels.includes(button.dataset.adminPanel);
+      });
+      if (!availablePanels.includes(activeAdminPanel)) activeAdminPanel = availablePanels[0] || "requests";
+      document.querySelectorAll(".admin-panel").forEach(panel => {
+        const panelName = panel.id.replace("admin-panel-", "");
+        panel.hidden = !availablePanels.includes(panelName) || panelName !== activeAdminPanel;
+      });
+      document.querySelectorAll(".admin-panel-tab").forEach(button => {
+        const selected = button.dataset.adminPanel === activeAdminPanel;
+        button.classList.toggle("active", selected);
+        button.setAttribute("aria-selected", String(selected));
+      });
+    }
+
     function switchView(viewName) {
       const view = document.getElementById(`view-${viewName}`);
       if (!view) return;
@@ -1071,6 +1213,7 @@
       const selectedTab = document.querySelector(`.tab[data-view="${viewName}"]`);
       if (selectedTab) selectedTab.scrollIntoView({ block: "nearest", inline: "nearest", behavior: "smooth" });
       window.scrollTo({ top: 0, behavior: "smooth" });
+      if (viewName === "admin") loadAdminPanel(activeAdminPanel);
     }
 
     function notify(message) {
@@ -1116,8 +1259,257 @@
       );
     }
 
+    function showLogin(message = "") {
+      document.getElementById("app-shell").hidden = true;
+      document.getElementById("login-screen").hidden = false;
+      const error = document.getElementById("login-error");
+      error.textContent = message;
+      error.hidden = !message;
+      error.classList.remove("pending");
+    }
+
+    function showDashboard(session) {
+      document.getElementById("login-screen").hidden = true;
+      document.getElementById("app-shell").hidden = false;
+      document.getElementById("session-user").textContent = `${session.username} · ${session.profile}`;
+      currentPrivileges = session.privileges || {};
+      configureAdminPanels(currentPrivileges);
+      document.getElementById("refresh-button").hidden = !currentPrivileges.refresh_data;
+      document.getElementById("export-button").hidden = !currentPrivileges.export_data;
+      document.getElementById("login-password").value = "";
+      startDashboard();
+    }
+
+    let dashboardStarted = false;
+    let authRedirecting = false;
+
+    async function apiFetch(url, options = {}) {
+      const response = await fetch(url, {
+        ...options,
+        credentials: "same-origin",
+        cache: options.cache || "no-store"
+      });
+      if (response.status === 401 && !authRedirecting) {
+        authRedirecting = true;
+        try {
+          await fetch("/api/logout", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            credentials: "same-origin",
+            body: "{}",
+            cache: "no-store"
+          });
+        } finally {
+          showLogin("Session expirée ou accès retiré. Reconnecte-toi.");
+          authRedirecting = false;
+        }
+      }
+      return response;
+    }
+
+    async function initializeSession() {
+      try {
+        const response = await fetch("/api/session", { cache: "no-store", credentials: "same-origin" });
+        const session = await response.json();
+        if (!response.ok) throw new Error(session.error || `Erreur HTTP ${response.status}`);
+        if (session.authenticated) showDashboard(session);
+        else showLogin();
+      } catch {
+        showLogin("Service d’authentification indisponible. Réessaie dans un instant.");
+      }
+    }
+
+    document.getElementById("login-form").addEventListener("submit", async event => {
+      event.preventDefault();
+      const username = document.getElementById("login-username").value.trim();
+      const passwordInput = document.getElementById("login-password");
+      const button = document.getElementById("login-submit");
+      const error = document.getElementById("login-error");
+      button.disabled = true;
+      button.textContent = "Vérification LDAP…";
+      error.hidden = true;
+      try {
+        const response = await fetch("/api/login", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "same-origin",
+          body: JSON.stringify({ username, password: passwordInput.value }),
+          cache: "no-store"
+        });
+        const result = await response.json();
+        if (response.status === 202) {
+          error.textContent = result.message || "Demande envoyée aux administrateurs.";
+          error.hidden = false;
+          error.classList.add("pending");
+          return;
+        }
+        error.classList.remove("pending");
+        if (!response.ok) throw new Error(result.error || "Connexion refusée.");
+        window.location.replace("/");
+      } catch (loginError) {
+        error.textContent = loginError instanceof Error ? loginError.message : "Connexion LDAP impossible.";
+        error.hidden = false;
+        passwordInput.value = "";
+        passwordInput.focus();
+      } finally {
+        button.disabled = false;
+        button.textContent = "Se connecter";
+      }
+    });
+
+    document.getElementById("logout-button").addEventListener("click", async () => {
+      try {
+        const response = await fetch("/api/logout", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "same-origin",
+          body: "{}",
+          cache: "no-store"
+        });
+        if (!response.ok) throw new Error("La session n’a pas pu être fermée.");
+        window.location.reload();
+      } catch (error) {
+        notify(error instanceof Error ? error.message : "Déconnexion impossible.");
+      }
+    });
+
+    async function adminRequest(path, options = {}) {
+      const response = await apiFetch(`/api/admin/${path}`, {
+        ...options,
+        headers: { "Content-Type": "application/json", ...(options.headers || {}) },
+        body: options.body || undefined
+      });
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error || `Erreur HTTP ${response.status}`);
+      return result;
+    }
+
+    function setAdminStatus(message, isError = false) {
+      const status = document.getElementById("admin-status");
+      status.textContent = message;
+      status.classList.toggle("login-error", isError);
+    }
+
+    function switchAdminPanel(panelName) {
+      activeAdminPanel = panelName;
+      document.querySelectorAll(".admin-panel-tab").forEach(button => {
+        const selected = button.dataset.adminPanel === panelName;
+        button.classList.toggle("active", selected);
+        button.setAttribute("aria-selected", String(selected));
+      });
+      document.querySelectorAll(".admin-panel").forEach(panel => {
+        panel.hidden = panel.id !== `admin-panel-${panelName}`;
+      });
+      loadAdminPanel(panelName);
+    }
+
+    function profileOptions(profiles, selected, disabled = false) {
+      return `<select class="tool-select" data-field="profile" ${disabled ? "disabled" : ""}>${profiles.map(profile => `<option value="${safe(profile.profile_key)}" ${profile.profile_key === selected ? "selected" : ""}>${safe(profile.name)}</option>`).join("")}</select>`;
+    }
+
+    function renderAdminRequests(requests, profiles) {
+      const target = document.getElementById("admin-requests");
+      if (!requests.length) {
+        target.innerHTML = '<div class="admin-empty">Aucune demande en attente.</div>';
+        return;
+      }
+      target.innerHTML = `<table><thead><tr><th>Identifiant LDAP</th><th>Email</th><th>Demandé le</th><th>Profil à attribuer</th><th>Décision</th></tr></thead><tbody>${requests.map(request => `<tr><td class="td-strong">${safe(request.username)}</td><td>${safe(request.email || "—")}</td><td>${safe(new Date(request.requested_at).toLocaleString("fr-FR"))}</td><td>${profileOptions(profiles, "viewer")}</td><td><div class="admin-actions"><button class="btn" type="button" data-admin-action="approve" data-request-id="${request.id}">Approuver</button><button class="btn" type="button" data-admin-action="reject" data-request-id="${request.id}">Refuser</button></div></td></tr>`).join("")}</tbody></table>`;
+    }
+
+    function renderAdminUsers(users, profiles) {
+      const target = document.getElementById("admin-users");
+      if (!users.length) {
+        target.innerHTML = '<div class="admin-empty">Aucun compte enregistré.</div>';
+        return;
+      }
+      target.innerHTML = `<table><thead><tr><th>Identifiant LDAP</th><th>Nom affiché</th><th>Email</th><th>Profil</th><th>État</th><th></th></tr></thead><tbody>${users.map(user => {
+        const fixed = user.username.toLowerCase() === "massima";
+        return `<tr data-user-id="${user.id}"><td class="td-strong">${safe(user.username)}${fixed ? ' <span class="admin-status-active">· Admin protégé</span>' : ""}</td><td><input class="tool-input" data-field="full-name" value="${safe(user.full_name)}" aria-label="Nom affiché"></td><td><input class="tool-input" data-field="email" type="email" value="${safe(user.email)}" aria-label="Email"></td><td>${profileOptions(profiles, user.profile_key, fixed)}</td><td><select class="tool-select" data-field="status" ${fixed ? "disabled" : ""}><option value="active" ${user.status === "active" ? "selected" : ""}>Actif</option><option value="disabled" ${user.status === "disabled" ? "selected" : ""}>Suspendu</option></select></td><td><button class="btn" type="button" data-admin-action="update-user">Enregistrer</button></td></tr>`;
+      }).join("")}</tbody></table>`;
+    }
+
+    function renderAdminProfiles(profiles) {
+      const target = document.getElementById("admin-profiles");
+      target.innerHTML = profiles.map(profile => `<section class="admin-profile-block" data-profile-key="${safe(profile.profile_key)}"><div class="admin-profile-head"><div><h3>${safe(profile.name)}</h3><p>${safe(profile.description)}</p></div>${profile.profile_key === "admin" ? '<span class="admin-status-active">Privilèges fixes</span>' : `<button class="btn" type="button" data-admin-action="save-profile" data-profile-key="${safe(profile.profile_key)}">Enregistrer les droits</button>`}</div><article class="card table-card"><div class="table-scroll"><table><thead><tr><th>Privilège</th><th>Description</th><th>Autorisé</th></tr></thead><tbody>${profile.privileges.map(privilege => `<tr><td class="td-strong">${safe(privilege.name)}</td><td>${safe(privilege.description)}</td><td><input class="admin-check" type="checkbox" data-privilege="${safe(privilege.privilege_key)}" ${privilege.can_access ? "checked" : ""} ${profile.profile_key === "admin" ? "disabled" : ""} aria-label="${safe(privilege.name)}"></td></tr>`).join("")}</tbody></table></div></article></section>`).join("");
+    }
+
+    function renderAdminAudit(entries) {
+      const target = document.getElementById("admin-audit");
+      if (!entries.length) {
+        target.innerHTML = '<div class="admin-empty">Aucun événement enregistré.</div>';
+        return;
+      }
+      target.innerHTML = `<table><thead><tr><th>Date</th><th>Acteur</th><th>Action</th><th>Cible</th><th>Résultat</th><th>Détails</th></tr></thead><tbody>${entries.map(entry => `<tr><td>${safe(new Date(entry.occurred_at).toLocaleString("fr-FR"))}</td><td>${safe(entry.actor)}</td><td class="td-strong">${safe(entry.action)}</td><td>${safe(entry.target || "—")}</td><td>${safe(entry.outcome)}</td><td>${safe(JSON.stringify(entry.details))}</td></tr>`).join("")}</tbody></table>`;
+    }
+
+    async function loadAdminPanel(panelName = activeAdminPanel) {
+      setAdminStatus("Chargement…");
+      try {
+        if (panelName === "requests") {
+          const [requests, profiles] = await Promise.all([adminRequest("requests"), adminRequest("profiles")]);
+          renderAdminRequests(requests.requests, profiles.profiles);
+        } else if (panelName === "users") {
+          const [users, profiles] = await Promise.all([adminRequest("users"), adminRequest("profiles")]);
+          renderAdminUsers(users.users, profiles.profiles);
+        } else if (panelName === "profiles") {
+          const profiles = await adminRequest("profiles");
+          renderAdminProfiles(profiles.profiles);
+        } else if (panelName === "audit") {
+          const entries = await adminRequest("audit");
+          renderAdminAudit(entries.entries);
+        }
+        setAdminStatus("");
+      } catch (error) {
+        setAdminStatus(error instanceof Error ? error.message : "Chargement impossible.", true);
+      }
+    }
+
+    async function handleAdminAction(button) {
+      const action = button.dataset.adminAction;
+      button.disabled = true;
+      try {
+        if (action === "approve" || action === "reject") {
+          const row = button.closest("tr");
+          const requestId = button.dataset.requestId;
+          const profileKey = row.querySelector('[data-field="profile"]').value;
+          await adminRequest(`requests/${requestId}/${action}`, {
+            method: "POST",
+            body: JSON.stringify(action === "approve" ? { profile_key: profileKey } : {})
+          });
+        } else if (action === "update-user") {
+          const row = button.closest("tr");
+          await adminRequest(`users/${row.dataset.userId}`, {
+            method: "POST",
+            body: JSON.stringify({
+              profile_key: row.querySelector('[data-field="profile"]').value,
+              status: row.querySelector('[data-field="status"]').value,
+              full_name: row.querySelector('[data-field="full-name"]').value,
+              email: row.querySelector('[data-field="email"]').value
+            })
+          });
+        } else if (action === "save-profile") {
+          const profile = button.closest("[data-profile-key]");
+          const privileges = Object.fromEntries(Array.from(profile.querySelectorAll("[data-privilege]")).map(input => [input.dataset.privilege, input.checked]));
+          await adminRequest(`profiles/${button.dataset.profileKey}/privileges`, {
+            method: "POST",
+            body: JSON.stringify({ privileges })
+          });
+        }
+        notify("Modifications enregistrées et journalisées.");
+        await loadAdminPanel(activeAdminPanel);
+      } catch (error) {
+        notify(error instanceof Error ? error.message : "Action impossible.");
+        button.disabled = false;
+      }
+    }
+
+    document.getElementById("view-admin").addEventListener("click", event => {
+      const button = event.target.closest("[data-admin-action]");
+      if (button) handleAdminAction(button);
+    });
+
     async function getSnapshot() {
-      const response = await fetch("/api/metrics", { cache: "no-store" });
+      const response = await apiFetch("/api/metrics");
       const payload = await response.json();
       if (!response.ok) throw new Error(payload.error || `Erreur HTTP ${response.status}`);
       if (payload.generated_at !== DATA.generatedAt) applySnapshot(payload);
@@ -1132,7 +1524,7 @@
       button.title = "Rafraîchissement Presto en cours";
       showFreshnessMessage("Interrogation des partitions Presto récentes en cours. Les autres modules continuent d’afficher leur statut de fraîcheur.");
       try {
-        const response = await fetch("/api/refresh", {
+        const response = await apiFetch("/api/refresh", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: "{}",
@@ -1158,7 +1550,7 @@
       if (document.hidden) return;
       try {
         await getSnapshot();
-        const response = await fetch("/api/health", { cache: "no-store" });
+        const response = await apiFetch("/api/health");
         const health = await response.json();
         if (!response.ok) throw new Error(health.error || `Erreur HTTP ${response.status}`);
         const refresh = health.refresh || {};
@@ -1203,6 +1595,10 @@
     }
 
     function exportCurrentView() {
+      if (!currentPrivileges.export_data) {
+        notify("Ton profil ne permet pas d’exporter les données.");
+        return;
+      }
       const data = csvModules[activeView];
       if (!data) {
         notify("Aucun export n’est disponible pour ce module.");
@@ -1230,26 +1626,48 @@
       notify("Export du module téléchargé.");
     }
 
-    document.querySelectorAll(".tab[data-view]").forEach(tab => tab.addEventListener("click", () => switchView(tab.dataset.view)));
-    document.querySelectorAll(".geo-metric-button").forEach(button => button.addEventListener("click", () => {
-      geographicMetric = button.dataset.geoMetric;
-      renderGeographyMap();
-    }));
-    document.getElementById("export-button").addEventListener("click", exportCurrentView);
-    document.getElementById("refresh-button").addEventListener("click", () => refreshSnapshot());
-    document.addEventListener("visibilitychange", syncServerState);
-    window.setInterval(syncServerState, SERVER_STATUS_POLL_INTERVAL_MS);
-    renderExecutive();
-    renderRealtime();
-    renderRecruitment();
-    renderGeography();
-    renderMomo();
-    renderComplaints();
-    renderServices();
-    renderSystem();
-    renderDocs();
-    loadBeninBoundaries();
-    loadSnapshot();
+    function startDashboard() {
+      if (dashboardStarted) return;
+      dashboardStarted = true;
+      const themeButton = document.getElementById("theme-toggle");
+      const applyTheme = theme => {
+        document.documentElement.dataset.theme = theme;
+        const next = theme === "dark" ? "clair" : "sombre";
+        themeButton.textContent = theme === "dark" ? "☼" : "☾";
+        themeButton.title = `Passer en thème ${next}`;
+        themeButton.setAttribute("aria-label", `Passer en thème ${next}`);
+        document.querySelector('meta[name="theme-color"]')?.setAttribute("content", theme === "dark" ? "#08090d" : "#f3f5f7");
+      };
+      applyTheme(localStorage.getItem("mtn-marketing-theme") === "light" ? "light" : "dark");
+      themeButton.addEventListener("click", () => {
+        const next = document.documentElement.dataset.theme === "dark" ? "light" : "dark";
+        localStorage.setItem("mtn-marketing-theme", next);
+        applyTheme(next);
+      });
+      document.querySelectorAll(".tab[data-view]").forEach(tab => tab.addEventListener("click", () => switchView(tab.dataset.view)));
+      document.querySelectorAll(".admin-panel-tab").forEach(button => button.addEventListener("click", () => switchAdminPanel(button.dataset.adminPanel)));
+      document.querySelectorAll(".geo-metric-button").forEach(button => button.addEventListener("click", () => {
+        geographicMetric = button.dataset.geoMetric;
+        renderGeographyMap();
+      }));
+      document.getElementById("export-button").addEventListener("click", exportCurrentView);
+      document.getElementById("refresh-button").addEventListener("click", () => refreshSnapshot());
+      document.addEventListener("visibilitychange", syncServerState);
+      window.setInterval(syncServerState, SERVER_STATUS_POLL_INTERVAL_MS);
+      renderExecutive();
+      renderRealtime();
+      renderRecruitment();
+      renderGeography();
+      renderMomo();
+      renderComplaints();
+      renderServices();
+      renderSystem();
+      renderDocs();
+      loadBeninBoundaries();
+      loadSnapshot();
+    }
+
+    initializeSession();
   </script>
 </body>
 </html>

@@ -3,9 +3,12 @@ from __future__ import annotations
 from datetime import date, datetime, timedelta
 import os
 import re
+import requests
+import ssl
 import socket
 import time
 from typing import Any
+from requests.adapters import HTTPAdapter
 
 from sqlalchemy import create_engine, text
 from sqlalchemy.engine import Connection
@@ -87,14 +90,34 @@ def _non_negative_int(raw: str | None, default: int) -> int:
         return default
     return value if value >= 0 else default
 
+
+class _PrestoTLSAdapter(HTTPAdapter):
+    def __init__(self, verify: bool | str) -> None:
+        self.ssl_context = ssl.create_default_context()
+        if verify is False:
+            self.ssl_context.check_hostname = False
+            self.ssl_context.verify_mode = ssl.CERT_NONE
+        self.ssl_context.set_ciphers("DEFAULT:!DH")
+        super().__init__()
+
+    def init_poolmanager(self, connections, maxsize, block=False, **pool_kwargs):
+        pool_kwargs["ssl_context"] = self.ssl_context
+        super().init_poolmanager(connections, maxsize, block, **pool_kwargs)
+
+
 class MarketingRefresh:
     def __init__(self) -> None:
         self.settings = presto_settings()
         self.engine = None
+        self.requests_session: requests.Session | None = None
 
     def connect(self):
         settings = self.settings
         password = settings["password"]
+        self.requests_session = requests.Session()
+        self.requests_session.mount(
+            "https://", _PrestoTLSAdapter(settings["tls_verify"])
+        )
         url = URL.create(
             "presto",
             username=str(settings["username"]),
@@ -111,6 +134,7 @@ class MarketingRefresh:
                     "verify": settings["tls_verify"],
                     "timeout": (8, 120),
                 },
+                "requests_session": self.requests_session,
                 "session_props": {"query_max_run_time": str(settings["query_timeout"])},
             },
             pool_pre_ping=True,
@@ -121,20 +145,30 @@ class MarketingRefresh:
     def query(connection: Connection, statement: str) -> list[dict[str, Any]]:
         try:
             result = connection.execute(text(statement))
+            return [dict(row._mapping) for row in result.fetchall()]
         except Exception as error:
             source = re.search(r"\bFROM\s+([A-Za-z0-9_.]+)", statement, re.IGNORECASE)
             source_name = source.group(1) if source else "source inconnue"
+            query_excerpt = " ".join(statement.split())[:180]
             raise RefreshError(
                 f"Échec d'une requête Presto sur {source_name} "
-                f"({type(error).__name__}: {str(error).splitlines()[0][:160]})."
+                f"({type(error).__name__}: {str(error).splitlines()[0][:160]}). "
+                f"Requête: {query_excerpt}"
             ) from error
-        return [dict(row._mapping) for row in result.fetchall()]
 
     @staticmethod
     def partition_candidates(today: date, days: int = 14) -> str:
         return ", ".join(
             str(int((today - timedelta(days=offset)).strftime("%Y%m%d")))
             for offset in range(days + 1)
+        )
+
+    @classmethod
+    def registration_partition_query(cls, today: date, days: int = 30) -> str:
+        candidates = cls.partition_candidates(today, days)
+        return (
+            "SELECT MAX(tbl_dt) AS date FROM feeds.irm_edit_registration_status "
+            f"WHERE tbl_dt IN ({candidates})"
         )
 
     def refresh(self) -> dict[str, Any]:
@@ -195,7 +229,7 @@ class MarketingRefresh:
 
             registration_partitions = self.query(
                 connection,
-                "SELECT MAX(tbl_dt) AS date FROM feeds.irm_edit_registration_status",
+                self.registration_partition_query(today),
             )
             if not registration_partitions or registration_partitions[0]["date"] is None:
                 raise RefreshError("Aucun snapshot d'inscription récent disponible dans Presto.")
@@ -475,6 +509,8 @@ class MarketingRefresh:
                 connection.close()
             if self.engine is not None:
                 self.engine.dispose()
+            if self.requests_session is not None:
+                self.requests_session.close()
 
 
 def refresh_marketing_data() -> dict[str, Any]:

@@ -6,12 +6,22 @@ import mimetypes
 import os
 import secrets
 import threading
+from http.cookies import SimpleCookie
 from datetime import datetime, timedelta, timezone
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import unquote, urlsplit
 
-from app.config import BASE_DIR, SNAPSHOT_PATH, marketing_refresh_interval_seconds
+from app.config import BASE_DIR, SNAPSHOT_PATH, access_database_path, marketing_refresh_interval_seconds
+from app.access_control import AccessControlStore
+from app.auth import (
+    InvalidCredentialsError,
+    LDAPUnavailableError,
+    authenticate_ldap,
+    create_session,
+    delete_session,
+    session_username,
+)
 from app.metrics import load_snapshot
 from app.presto import RefreshError, is_transient_network_error, refresh_marketing_data
 
@@ -26,6 +36,36 @@ _refresh_state = {
     "last_success_at": None,
     "last_error": None,
 }
+SESSION_COOKIE = "mtn_marketing_session"
+access_store = AccessControlStore(access_database_path())
+
+
+def _remote_access_enabled() -> bool:
+    return os.environ.get("MTN_MARKETING_ALLOW_REMOTE", "false").strip().lower() in {
+        "1", "true", "yes", "on"
+    }
+
+
+def _allowed_hosts() -> set[str]:
+    values = os.environ.get("MTN_MARKETING_ALLOWED_HOSTS", "10.77.60.96")
+    return {value.strip().lower() for value in values.split(",") if value.strip()}
+
+
+def request_address_allowed(
+    client_address: str,
+    host_header: str,
+    *,
+    allow_remote: bool,
+    allowed_hosts: set[str],
+) -> bool:
+    try:
+        host = urlsplit(f"//{host_header}").hostname
+        client_ip = ipaddress.ip_address(client_address)
+    except ValueError:
+        return False
+    if client_ip.is_loopback and host in {"127.0.0.1", "localhost", "::1"}:
+        return True
+    return allow_remote and host is not None and host.lower() in allowed_hosts
 
 
 def _utc_now() -> datetime:
@@ -167,33 +207,143 @@ class MarketingHandler(BaseHTTPRequestHandler):
         super().end_headers()
 
     def log_message(self, format_string: str, *args: object) -> None:
-        print(f"{self.client_address[0]} - {format_string % args}")
+        request_line = str(args[0]) if args else self.requestline
+        parts = request_line.split(" ", 2)
+        method = parts[0] if parts else "?"
+        path = urlsplit(parts[1]).path if len(parts) > 1 else "/"
+        status = args[1] if len(args) > 1 else "-"
+        print(f'{self.client_address[0]} - "{method} {path}" {status}')
 
-    def _json(self, status: int, value: dict) -> None:
+    def _json(self, status: int, value: dict, headers: dict[str, str] | None = None) -> None:
         body = json.dumps(value, ensure_ascii=False, separators=(",", ":")).encode("utf-8")
         self.send_response(status)
         self.send_header("Content-Type", "application/json; charset=utf-8")
         self.send_header("Cache-Control", "no-store")
         self.send_header("Content-Length", str(len(body)))
+        for name, header_value in (headers or {}).items():
+            self.send_header(name, header_value)
         self.end_headers()
         self.wfile.write(body)
 
-    def _local_only(self) -> bool:
+    def _session_token(self) -> str | None:
+        cookie = SimpleCookie()
         try:
-            host = urlsplit(f"//{self.headers.get('Host', '')}").hostname
-            return (
-                ipaddress.ip_address(self.client_address[0]).is_loopback
-                and host in {"127.0.0.1", "localhost", "::1"}
-            )
+            cookie.load(self.headers.get("Cookie", ""))
+        except Exception:
+            return None
+        morsel = cookie.get(SESSION_COOKIE)
+        return morsel.value if morsel else None
+
+    def _read_json_object(self) -> dict | None:
+        if self.headers.get_content_type() != "application/json":
+            self._json(415, {"error": "Une requête JSON est requise."})
+            return None
+        try:
+            body_length = int(self.headers.get("Content-Length", "0"))
         except ValueError:
-            return False
+            self._json(400, {"error": "Taille de requête invalide."})
+            return None
+        if body_length < 0 or body_length > MAX_BODY_BYTES:
+            self._json(413, {"error": "Requête trop volumineuse."})
+            return None
+        try:
+            payload = json.loads(self.rfile.read(body_length))
+        except (json.JSONDecodeError, UnicodeDecodeError):
+            self._json(400, {"error": "Corps JSON invalide."})
+            return None
+        if not isinstance(payload, dict):
+            self._json(400, {"error": "Un objet JSON est requis."})
+            return None
+        return payload
+
+    def _session_cookie(self, token: str, timeout: int) -> str:
+        value = f"{SESSION_COOKIE}={token}; Path=/; HttpOnly; SameSite=Strict; Max-Age={timeout}"
+        if self.headers.get("X-Forwarded-Proto", "").lower() == "https":
+            value += "; Secure"
+        return value
+
+    def _clear_session_cookie(self) -> str:
+        value = f"{SESSION_COOKIE}=; Path=/; HttpOnly; SameSite=Strict; Max-Age=0"
+        if self.headers.get("X-Forwarded-Proto", "").lower() == "https":
+            value += "; Secure"
+        return value
+
+    def _local_only(self) -> bool:
+        return request_address_allowed(
+            self.client_address[0],
+            self.headers.get("Host", ""),
+            allow_remote=_remote_access_enabled(),
+            allowed_hosts=_allowed_hosts(),
+        )
 
     def do_GET(self) -> None:
         if not self._local_only():
             self._json(403, {"error": "Cette interface est limitée à la machine locale."})
             return
         path = urlsplit(self.path).path
+        if path == "/api/session":
+            username = session_username(self._session_token())
+            access = access_store.get_access(username) if username else None
+            if username and access is None:
+                delete_session(self._session_token())
+            self._json(
+                200,
+                {
+                    "authenticated": access is not None,
+                    "username": access["username"] if access else None,
+                    "profile": access["profile_key"] if access else None,
+                    "privileges": access["privileges"] if access else {},
+                },
+            )
+            return
+        username = session_username(self._session_token())
+        access = access_store.get_access(username) if username else None
+        if path.startswith("/api/") and access is None:
+            if username:
+                delete_session(self._session_token())
+            self._json(401, {"error": "Authentification LDAP requise."})
+            return
+        if path.startswith("/api/admin/"):
+            if path == "/api/admin/requests":
+                allowed = access["privileges"].get("review_account_requests", False)
+                required = "review_account_requests"
+            elif path == "/api/admin/users":
+                allowed = access["privileges"].get("manage_accounts", False)
+                required = "manage_accounts"
+            elif path == "/api/admin/profiles":
+                allowed = any(
+                    access["privileges"].get(key, False)
+                    for key in ("review_account_requests", "manage_accounts", "manage_profiles")
+                )
+                required = "review_account_requests, manage_accounts ou manage_profiles"
+            elif path == "/api/admin/audit":
+                allowed = access["privileges"].get("view_audit_logs", False)
+                required = "view_audit_logs"
+            else:
+                self.send_error(404)
+                return
+            if not allowed:
+                access_store.record_event(username, "authorization_denied", path, "denied", {"privilege": required})
+                self._json(403, {"error": "Privilège administrateur requis."})
+                return
+            if path == "/api/admin/requests":
+                self._json(200, {"requests": access_store.list_requests("pending")})
+                return
+            if path == "/api/admin/users":
+                self._json(200, {"users": access_store.list_users()})
+                return
+            if path == "/api/admin/profiles":
+                self._json(200, {"profiles": access_store.list_profiles()})
+                return
+            if path == "/api/admin/audit":
+                self._json(200, {"entries": access_store.list_audit()})
+                return
+            self.send_error(404)
+            return
         if path == "/api/health":
+            if not access["privileges"].get("view_dashboard", False):
+                self._json(403, {"error": "Privilège de consultation requis."})
+                return
             snapshot = load_snapshot()
             refresh_state = _refresh_state_snapshot()
             refresh_interval = marketing_refresh_interval_seconds()
@@ -212,6 +362,9 @@ class MarketingHandler(BaseHTTPRequestHandler):
             )
             return
         if path == "/api/metrics":
+            if not access["privileges"].get("view_dashboard", False):
+                self._json(403, {"error": "Privilège de consultation requis."})
+                return
             snapshot = load_snapshot()
             if snapshot is None:
                 self._json(
@@ -262,26 +415,133 @@ class MarketingHandler(BaseHTTPRequestHandler):
         if not self._local_only():
             self._json(403, {"error": "Cette interface est limitée à la machine locale."})
             return
-        if urlsplit(self.path).path != "/api/refresh":
+        path = urlsplit(self.path).path
+        if path not in {"/api/login", "/api/logout", "/api/refresh"} and not path.startswith("/api/admin/"):
             self.send_error(404)
             return
         if not self._origin_allowed():
             self._json(403, {"error": "Origine de requête refusée."})
             return
-        if self.headers.get_content_type() != "application/json":
-            self._json(415, {"error": "Le rafraîchissement exige une requête JSON."})
+        payload = self._read_json_object()
+        if payload is None:
             return
-        try:
-            body_length = int(self.headers.get("Content-Length", "0"))
-        except ValueError:
-            self._json(400, {"error": "Taille de requête invalide."})
+
+        if path == "/api/login":
+            username = payload.get("username")
+            password = payload.get("password")
+            if not isinstance(username, str) or not isinstance(password, str):
+                self._json(400, {"error": "Identifiant et mot de passe requis."})
+                return
+            try:
+                authenticated_username = authenticate_ldap(username, password)
+            except InvalidCredentialsError:
+                access_store.record_event(username, "login", username, "invalid_credentials")
+                self._json(401, {"error": "Identifiants LDAP invalides."})
+                return
+            except LDAPUnavailableError:
+                access_store.record_event(username, "login", username, "ldap_unavailable")
+                self._json(503, {"error": "Service LDAP indisponible ou certificat non approuvé."})
+                return
+            email = username.strip() if "@" in username else ""
+            decision = access_store.record_ldap_login(authenticated_username, email)
+            if decision["state"] == "pending":
+                self._json(
+                    202,
+                    {
+                        "status": "pending",
+                        "message": "Demande envoyée aux administrateurs. Votre accès sera activé après approbation.",
+                    },
+                )
+                return
+            if decision["state"] == "disabled":
+                self._json(403, {"error": "Votre compte est désactivé. Contactez un administrateur."})
+                return
+            token, timeout = create_session(authenticated_username)
+            self._json(
+                200,
+                {"authenticated": True, "username": authenticated_username},
+                {"Set-Cookie": self._session_cookie(token, timeout)},
+            )
             return
-        if body_length > MAX_BODY_BYTES:
-            self._json(413, {"error": "Requête trop volumineuse."})
+
+        if path == "/api/logout":
+            username = session_username(self._session_token())
+            delete_session(self._session_token())
+            if username:
+                access_store.record_event(username, "logout", username, "success")
+            self._json(
+                200,
+                {"authenticated": False},
+                {"Set-Cookie": self._clear_session_cookie()},
+            )
+            return
+
+        username = session_username(self._session_token())
+        access = access_store.get_access(username) if username else None
+        if access is None:
+            if username:
+                delete_session(self._session_token())
+            self._json(401, {"error": "Authentification LDAP requise."})
+            return
+        if path.startswith("/api/admin/"):
+            segments = path.strip("/").split("/")
+            if len(segments) >= 3 and segments[2] == "requests":
+                required = "review_account_requests"
+            elif len(segments) >= 3 and segments[2] == "users":
+                required = "manage_accounts"
+            elif len(segments) >= 3 and segments[2] == "profiles":
+                required = "manage_profiles"
+            else:
+                self.send_error(404)
+                return
+            if not access["privileges"].get(required, False):
+                access_store.record_event(username, "authorization_denied", path, "denied", {"privilege": required})
+                self._json(403, {"error": "Privilège administrateur requis."})
+                return
+            try:
+                if len(segments) == 5 and segments[2] == "requests":
+                    request_id = int(segments[3])
+                    if segments[4] == "approve":
+                        result = access_store.approve_request(
+                            request_id, username, str(payload.get("profile_key", "viewer"))
+                        )
+                        self._json(200, {"user": result})
+                        return
+                    if segments[4] == "reject":
+                        access_store.reject_request(request_id, username, str(payload.get("note", "")))
+                        self._json(200, {"status": "rejected"})
+                        return
+                if len(segments) == 4 and segments[2] == "users":
+                    result = access_store.update_user(
+                        int(segments[3]),
+                        username,
+                        str(payload.get("profile_key", "viewer")),
+                        str(payload.get("status", "active")),
+                        str(payload.get("email", "")),
+                        str(payload.get("full_name", "")),
+                    )
+                    self._json(200, {"user": result})
+                    return
+                if len(segments) == 5 and segments[2] == "profiles" and segments[4] == "privileges":
+                    privileges = payload.get("privileges")
+                    if not isinstance(privileges, dict):
+                        raise ValueError("Une matrice de privilèges est requise.")
+                    access_store.update_profile_privileges(segments[3], username, privileges)
+                    self._json(200, {"status": "updated"})
+                    return
+            except (ValueError, TypeError) as error:
+                self._json(400, {"error": str(error)})
+                return
+            self.send_error(404)
+            return
+        if path == "/api/refresh" and not access["privileges"].get("refresh_data", False):
+            access_store.record_event(username, "refresh_data", "snapshot", "denied")
+            self._json(403, {"error": "Votre profil ne permet pas d’actualiser les données."})
             return
         try:
             snapshot = _refresh_snapshot()
         except RefreshError as error:
+            access_store.record_event(username, "refresh_data", "snapshot", "failed", {"error": str(error)})
             self._json(502, {"error": str(error)})
             return
         if snapshot is None:
@@ -295,6 +555,7 @@ class MarketingHandler(BaseHTTPRequestHandler):
                 "source_dates": snapshot["source_dates"],
             },
         )
+        access_store.record_event(username, "refresh_data", "snapshot", "success")
 
     def _origin_allowed(self) -> bool:
         origin = self.headers.get("Origin")
@@ -303,13 +564,15 @@ class MarketingHandler(BaseHTTPRequestHandler):
         origin_url = urlsplit(origin)
         request_host = self.headers.get("Host", "").lower()
         return (
-            origin_url.hostname in {"127.0.0.1", "localhost", "::1"}
+            origin_url.scheme in {"http", "https"}
             and origin_url.netloc.lower() == request_host
         )
 
 def serve(host: str = "127.0.0.1", port: int = 8532) -> None:
-    if host not in {"127.0.0.1", "::1", "localhost"}:
-        raise ValueError("Le serveur n'accepte que les interfaces loopback.")
+    if host not in {"127.0.0.1", "::1", "localhost"} and not (
+        host == "0.0.0.0" and _remote_access_enabled()
+    ):
+        raise ValueError("Le bind réseau exige MTN_MARKETING_ALLOW_REMOTE=true.")
     server = ThreadingHTTPServer((host, port), MarketingHandler)
     server.daemon_threads = True
     stop_event = threading.Event()

@@ -1,3 +1,4 @@
 PyHive>=0.7.0
 requests>=2.31,<3
 SQLAlchemy>=1.4,<3
+ldap3>=2.9,<3

@@ -1,20 +1,94 @@
 import os
+import ssl
 import unittest
+from datetime import date
 from unittest.mock import Mock, patch
 
 from app.presto import (
     MarketingRefresh,
     RefreshError,
+    _PrestoTLSAdapter,
     is_transient_network_error,
     refresh_marketing_data,
 )
 
 
+class PrestoTLSAdapterTests(unittest.TestCase):
+    def test_adapter_excludes_weak_dh_but_keeps_ecdhe(self):
+        cipher_names = {cipher["name"] for cipher in _PrestoTLSAdapter(False).ssl_context.get_ciphers()}
+
+        self.assertTrue(any(name.startswith("ECDHE-RSA-") for name in cipher_names))
+        self.assertFalse(any(name.startswith("DHE-RSA-") for name in cipher_names))
+
+    def test_adapter_preserves_configured_certificate_verification(self):
+        verified_context = _PrestoTLSAdapter(True).ssl_context
+        unverified_context = _PrestoTLSAdapter(False).ssl_context
+
+        self.assertTrue(verified_context.check_hostname)
+        self.assertEqual(verified_context.verify_mode, ssl.CERT_REQUIRED)
+        self.assertFalse(unverified_context.check_hostname)
+        self.assertEqual(unverified_context.verify_mode, ssl.CERT_NONE)
+
+    @patch("app.presto.create_engine")
+    def test_refresh_passes_the_tls_session_to_presto(self, create_engine):
+        refresh = MarketingRefresh()
+        refresh.settings = {
+            "password": None,
+            "username": "reporting",
+            "host": "presto.example.test",
+            "port": 8443,
+            "catalog": "hive",
+            "schema": "default",
+            "protocol": "https",
+            "tls_verify": False,
+            "query_timeout": "90s",
+        }
+        expected_connection = Mock()
+        create_engine.return_value.connect.return_value = expected_connection
+
+        self.assertIs(refresh.connect(), expected_connection)
+
+        connect_args = create_engine.call_args.kwargs["connect_args"]
+        session = connect_args["requests_session"]
+        try:
+            self.assertIsInstance(session.get_adapter("https://presto/"), _PrestoTLSAdapter)
+            self.assertFalse(connect_args["requests_kwargs"]["verify"])
+        finally:
+            session.close()
+
+
 class PrestoQueryTests(unittest.TestCase):
+    def test_registration_partition_query_prunes_to_recent_partitions(self):
+        statement = MarketingRefresh.registration_partition_query(
+            date(2026, 10, 12)
+        )
+
+        self.assertIn("WHERE tbl_dt IN (", statement)
+        self.assertEqual(statement.count(",") + 1, 31)
+        self.assertIn("20261012", statement)
+        self.assertIn("20260912", statement)
+
     def test_query_includes_source_when_presto_fails(self):
         connection = Mock()
         connection.execute.side_effect = RuntimeError(
             "Query exceeded maximum time limit of 90.00s\nAdditional details"
+        )
+
+        with self.assertRaisesRegex(
+            RefreshError,
+            r"Échec d'une requête Presto sur itbi_ess\.datamart_refill_loc_vw "
+            r"\(RuntimeError: Query exceeded maximum time limit of 90\.00s\)",
+        ):
+            MarketingRefresh.query(
+                connection,
+                "SELECT COUNT(DISTINCT msisdn_key) "
+                "FROM itbi_ess.datamart_refill_loc_vw",
+            )
+
+    def test_query_includes_source_when_fetching_results_fails(self):
+        connection = Mock()
+        connection.execute.return_value.fetchall.side_effect = RuntimeError(
+            "Query exceeded maximum time limit of 90.00s"
         )
 
         with self.assertRaisesRegex(
